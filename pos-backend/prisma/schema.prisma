@@ -5,8 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
   moduleFormat = "cjs"
 }
 
@@ -17,25 +17,21 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
+  fullName  String
   password  String
+  role      Role     @default(SELLER)
   createdAt DateTime @default(now())
-  profile   Profile?
-}
-
-model Profile {
-  id       String @id @default(cuid())
-  fullName String
-  photoUrl String
-  userId   String @unique
-  user     User   @relation(fields: [userId], references: [id])
 }
 
 model Product {
-  id        String   @id @default(uuid())
-  name      String
-  sku       String   @unique
-  price     Decimal  @db.Decimal(10, 2)
-  stockQty  Int
+  id          String  @id @default(cuid())
+  name        String
+  sku         String  @unique
+  category    String
+  price       Float
+  stockQty    Int
+  image       String?
+  description String?
 
   saleItems SaleItem[]
 
@@ -46,30 +42,30 @@ model Product {
 }
 
 model Sale {
-  id          String     @id @default(uuid())
-  totalAmount Decimal    @db.Decimal(10, 2)
-  paymentType PaymentType
-  createdAt   DateTime   @default(now())
+  id            String        @id @default(cuid())
+  total         Float
+  paymentMethod PaymentType
+  customerName  String?
+  status        PaymentStatus @default(PENDING)
+  createdAt     DateTime      @default(now())
 
-  items       SaleItem[]
+  items SaleItem[]
 }
 
 model SaleItem {
-  id        String   @id @default(uuid())
-  saleId   String
+  id        String @id @default(cuid())
+  saleId    String
   productId String
 
   quantity  Int
-  unitPrice Decimal  @db.Decimal(10, 2)
-  total     Decimal  @db.Decimal(10, 2)
+  unitPrice Float
 
-  sale      Sale     @relation(fields: [saleId], references: [id])
-  product   Product  @relation(fields: [productId], references: [id])
+  sale    Sale    @relation(fields: [saleId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 
   @@index([saleId])
   @@index([productId])
 }
-
 
 enum PaymentType {
   CASH
@@ -77,6 +73,12 @@ enum PaymentType {
   MOBILE
 }
 
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+}
 
-
-
+enum Role {
+  SELLER
+  ADMIN
+}

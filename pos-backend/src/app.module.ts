@@ -7,6 +7,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule, JwtService } from '@nestjs/jwt';
+import { ProductModule } from './product/product.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
     CustomConfigModule,
     PrismaModule,
     UsersModule,
+    ProductModule,
   ],
   controllers: [],
   providers: [

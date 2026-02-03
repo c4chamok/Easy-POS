@@ -17,4 +17,13 @@ export class CustomConfigService {
   getFrontendUrl(): string | undefined {
     return this.configService.get<string>('FRONTEND_URL');
   }
+  getRedisHost() {
+    return this.configService.get<string>('REDIS_HOST');
+  }
+  getRedisPort() {
+    return this.configService.get<number>('REDIS_PORT');
+  }
+  getRedisPassword() {
+    return this.configService.get<string>('REDIS_PASSWORD');
+  }
 }

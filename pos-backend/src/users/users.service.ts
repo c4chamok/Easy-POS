@@ -10,14 +10,26 @@ export class UsersService {
   async findUserById(userId: string) {
     return this.dbClient.user.findUnique({
       where: { id: userId },
-      select: { password: false, email: true, id: true },
+      select: {
+        password: false,
+        email: true,
+        id: true,
+        fullName: true,
+        role: true,
+      },
     });
   }
 
   async findUserByEmail(userEmail: string) {
     return this.dbClient.user.findUnique({
       where: { email: userEmail },
-      select: { password: true, email: true, id: true },
+      select: {
+        password: true,
+        email: true,
+        id: true,
+        fullName: true,
+        role: true,
+      },
     });
   }
 
@@ -35,6 +47,7 @@ export class UsersService {
       data: {
         email: dto.email,
         password: hashedPass,
+        fullName: dto.fullName,
       },
       select: { password: false, email: true, id: true },
     });
