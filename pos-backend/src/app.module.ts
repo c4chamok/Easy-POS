@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ProductModule } from './product/product.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ProductModule } from './product/product.module';
     JwtModule.register({ global: true }),
     CustomConfigModule,
     PrismaModule,
+    RedisModule,
     UsersModule,
     ProductModule,
   ],
