@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import Redis from 'ioredis';
 import { CustomConfigService } from '../config/config.service';
+import { getPagination } from '../common/utils/pagination';
 
 @Injectable()
 export class RedisService implements OnModuleDestroy, OnModuleInit {
@@ -46,23 +47,28 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
     });
   }
 
-  async setRedis<T>(key: string, body: T) {
-    await this.redis.set(key, JSON.stringify(body));
+  async setRedis<T>(key: string, body: T, ttl?: number) {
+    await this.redis.setex(key, ttl || 60 * 60 * 12, JSON.stringify(body));
   }
+
   async getRedis<T>(key: string): Promise<T | null> {
     const value = await this.redis.get(key);
     if (!value) return null;
     return JSON.parse(value) as T;
   }
+
   async delRedis(key: string): Promise<boolean> {
     const value = await this.redis.del(key);
     return value > 0;
   }
 
-  async getMany<T>(sub: string): Promise<T[]> {
+  async getMany<T>(
+    sub: string,
+    pagination?: { page?: number; limit?: number },
+  ): Promise<{ data: T[] }> {
+    const { limit, skip } = getPagination(pagination || {});
     let cursor = '0';
     const rows: T[] = [];
-    // console.log(sub);
 
     do {
       const [nextCursor, keys] = await this.redis.scan(
@@ -77,29 +83,40 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
         const pipeline = this.redis.pipeline();
         keys.forEach((key) => pipeline.get(key));
         const result = (await pipeline.exec()) as [Error | null, string][];
-        result.forEach(([err, data]) => {
+        for (let i = skip; i < skip + limit; i++) {
+          const [err, data] = result[i];
           if (!err && data.length) {
             rows.push(JSON.parse(data) as T);
           }
-        });
+        }
       }
 
       cursor = nextCursor;
     } while (cursor !== '0');
-    return rows;
+
+    return { data: rows };
   }
 
-  async setMany<T>(sub: string, field: string, data: T[]): Promise<unknown> {
+  async setMany<T>(
+    sub: string,
+    field: string,
+    data: T[],
+    ttl?: number,
+  ): Promise<[error: Error | null, result: unknown][]> {
     if (data.length) {
       const pipeline = this.redis.pipeline();
 
       data.forEach((r) =>
-        pipeline.set(`${sub}:${r[field]}`, JSON.stringify(r)),
+        pipeline.setex(
+          `${sub}:${r[field]}`,
+          ttl || 60 * 60 * 12,
+          JSON.stringify(r),
+        ),
       );
       const result = await pipeline.exec();
-      return result;
+      return result || [];
     }
-    return 0;
+    return [];
   }
 
   get client(): Redis {

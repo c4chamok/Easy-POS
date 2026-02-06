@@ -6,20 +6,30 @@ import {
   Param,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { Product } from '../../generated/prisma/client';
 import { ProductService } from './product.service';
+import { ProductAddDto } from './product.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { ApiResponse } from '../common/utils/api-response';
 
-@Controller('api/product')
+@Controller('api/products')
 export class ProductController {
   constructor(private productService: ProductService) {}
+
   @Get('')
-  fetchProducts() {
-    return this.productService.fetchProducts();
+  async fetchProducts(@Query() query: PaginationDto) {
+    const dbResponse = await this.productService.fetchProducts(query);
+    return ApiResponse.success(
+      dbResponse.data,
+      'products fetched successfully',
+      dbResponse.meta,
+    );
   }
 
   @Post()
-  addProduct(@Body() p: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) {
+  addProduct(@Body() p: ProductAddDto) {
     return this.productService.addProduct(p);
   }
 

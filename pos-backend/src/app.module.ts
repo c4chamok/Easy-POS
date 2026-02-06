@@ -9,6 +9,9 @@ import { AuthModule } from './auth/auth.module';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ProductModule } from './product/product.module';
 import { RedisModule } from './redis/redis.module';
+import { TestModule } from './test/test.module';
+import { OrderModule } from './order/order.module';
+import { PrismaExceptionFilter } from './common/filters/prismaException.filter';
 
 @Module({
   imports: [
@@ -19,9 +22,12 @@ import { RedisModule } from './redis/redis.module';
     RedisModule,
     UsersModule,
     ProductModule,
+    TestModule,
+    OrderModule,
   ],
   controllers: [],
   providers: [
+    { provide: APP_FILTER, useClass: PrismaExceptionFilter },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
     JwtService,
