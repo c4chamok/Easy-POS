@@ -2,13 +2,20 @@ import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { RegisterDto } from '../auth/DTO/auth.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private dbClient: PrismaService) {}
+  constructor(
+    private dbClient: PrismaService,
+    private redis: RedisService,
+  ) {}
 
   async findUserById(userId: string) {
-    return this.dbClient.user.findUnique({
+    // add cache feature
+    const userFromRedis = await this.redis.getRedis(`user:${userId}`);
+    if (userFromRedis) return userFromRedis;
+    const userFromDb = await this.dbClient.user.findUnique({
       where: { id: userId },
       select: {
         password: false,
@@ -18,6 +25,8 @@ export class UsersService {
         role: true,
       },
     });
+    await this.redis.setRedis(`user:${userId}`, userFromDb);
+    return userFromDb;
   }
 
   async findUserByEmail(userEmail: string) {
