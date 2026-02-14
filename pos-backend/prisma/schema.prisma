@@ -21,6 +21,8 @@ model User {
   password  String
   role      Role     @default(SELLER)
   createdAt DateTime @default(now())
+
+  cart Cart[]
 }
 
 model Product {
@@ -34,6 +36,7 @@ model Product {
   description String?
 
   saleItems SaleItem[]
+  carts     Cart[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -65,6 +68,22 @@ model SaleItem {
 
   @@index([saleId])
   @@index([productId])
+}
+
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  quantity  Int
+  unitPrice Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id])
+  users   User    @relation(fields: [userId], references: [id])
+
+  @@index([productId])
+  @@unique([userId, productId])
 }
 
 enum PaymentType {

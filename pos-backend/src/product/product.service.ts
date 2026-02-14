@@ -49,6 +49,19 @@ export class ProductService {
     };
   }
 
+  async findProductById(id: string) {
+    const cached = await this.redis.getRedis<Product>(`product:${id}`);
+    if (cached) return cached;
+
+    const product = await this.prisma.product.findUnique({
+      where: { id },
+    });
+    if (product) {
+      void this.redis.setRedis(`product:${id}`, product);
+    }
+    return product;
+  }
+
   async addProduct(p: ProductAddDto) {
     const { id: productId } = await this.prisma.product.create({
       data: { ...p, stockQty: p.stockQty || 0 },
