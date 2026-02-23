@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface OrderPaymentModalProps {
   order: Order | null;
@@ -28,17 +28,14 @@ export function OrderPaymentModal({ order, onClose }: OrderPaymentModalProps) {
   const handlePayment = () => {
     const paymentAmount = parseFloat(amount);
     if (!paymentAmount || paymentAmount <= 0) {
-      toast({
-        title: 'Invalid Amount',
+      toast.warning('Invalid Amount', {
         description: 'Please enter a valid payment amount.',
-        variant: 'destructive',
       });
       return;
     }
 
     updateOrderPayment(order.id, paymentAmount);
-    toast({
-      title: 'Payment Recorded',
+    toast('Payment Recorded', {
       description: `৳${paymentAmount} has been recorded for ${order.id}.`,
     });
     setAmount('');

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Banknote, CreditCard, Smartphone, X, Check } from 'lucide-react';
+import { Banknote, CreditCard, Smartphone, Check } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { usePOS } from '@/context/POSContext';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface PaymentModalProps {
   open: boolean;
@@ -23,7 +23,7 @@ type PaymentMethod = 'cash' | 'card' | 'mobile';
 
 export function PaymentModal({ open, onClose }: PaymentModalProps) {
   const { items, grandTotal, clearCart } = useCart();
-  const { addOrder, products } = usePOS();
+  const { addOrder } = usePOS();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [amountPaid, setAmountPaid] = useState<string>(grandTotal.toString());
   const [customerName, setCustomerName] = useState('');
@@ -33,10 +33,8 @@ export function PaymentModal({ open, onClose }: PaymentModalProps) {
 
   const handleConfirm = () => {
     if (parseFloat(amountPaid) < grandTotal && paymentMethod === 'cash') {
-      toast({
-        title: 'Insufficient Amount',
+      toast.warning('Insufficient Amount', {
         description: 'Amount paid is less than the total.',
-        variant: 'destructive',
       });
       return;
     }
@@ -56,8 +54,7 @@ export function PaymentModal({ open, onClose }: PaymentModalProps) {
       customerName: customerName || undefined,
     });
 
-    toast({
-      title: 'Order Created!',
+    toast('Order Created!',{
       description: `Order has been placed successfully.${change > 0 ? ` Change: ৳${change.toFixed(2)}` : ''}`,
     });
 

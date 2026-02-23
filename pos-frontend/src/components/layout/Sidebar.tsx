@@ -57,7 +57,7 @@ export function Sidebar() {
           onClick={() => setCollapsed(!collapsed)}
           className={cn(
             'text-sidebar-muted hover:text-sidebar-foreground hover:bg-sidebar-accent',
-            collapsed && 'absolute -right-3 top-6 bg-sidebar border border-sidebar-border rounded-full w-6 h-6 p-0'
+            collapsed && 'absolute top-6 left-14 bg-sidebar border border-sidebar-border rounded-full w-6 h-6 p-0'
           )}
         >
           <ChevronLeft className={cn('w-4 h-4 transition-transform', collapsed && 'rotate-180')} />

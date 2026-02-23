@@ -1,23 +1,20 @@
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { BrowserRouter, Routes, Route } from "react-router";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import { Provider } from "react-redux";
+import { store } from "./store";
+import Router from "./pages/Router";
 
 
 const App = () => (
+  <Provider store={store}>
     <TooltipProvider>
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <Router />
       {/* <div className="flex items-center justify-center h-screen bg-accent">
         <h1 className="text-primary font-bold">Hello, World!</h1>
       </div> */}
     </TooltipProvider>
+  </Provider>
 );
 
 export default App;

@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { categories } from '@/data/mockData';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface ProductFormModalProps {
   open: boolean;
@@ -69,10 +69,8 @@ export function ProductFormModal({ open, onClose, product }: ProductFormModalPro
     e.preventDefault();
 
     if (!formData.name || !formData.sku || !formData.price || !formData.stockQty) {
-      toast({
-        title: 'Validation Error',
+      toast.warning('Validation Error', {
         description: 'Please fill in all required fields.',
-        variant: 'destructive',
       });
       return;
     }
@@ -89,14 +87,12 @@ export function ProductFormModal({ open, onClose, product }: ProductFormModalPro
 
     if (isEditing && product) {
       updateProduct(product.id, productData);
-      toast({
-        title: 'Product Updated',
+      toast.success('Product Updated', {
         description: `${formData.name} has been updated successfully.`,
       });
     } else {
       addProduct(productData);
-      toast({
-        title: 'Product Added',
+      toast.success('Product Added', {
         description: `${formData.name} has been added to inventory.`,
       });
     }
