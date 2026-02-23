@@ -72,31 +72,35 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
     let cursor = '0';
     const rows: T[] = [];
 
-    do {
-      const [nextCursor, keys] = await this.redis.scan(
-        cursor,
-        'MATCH',
-        `${sub}*`,
-        'COUNT',
-        100,
-      );
+    try {
+      do {
+        const [nextCursor, keys] = await this.redis.scan(
+          cursor,
+          'MATCH',
+          `${sub}*`,
+          'COUNT',
+          100,
+        );
 
-      if (keys.length) {
-        const pipeline = this.redis.pipeline();
-        keys.forEach((key) => pipeline.get(key));
-        const result = (await pipeline.exec()) as [Error | null, string][];
-        for (let i = skip; i < skip + limit; i++) {
-          const [err, data] = result[i];
-          if (!err && data.length) {
-            rows.push(JSON.parse(data) as T);
+        if (keys.length) {
+          const pipeline = this.redis.pipeline();
+          keys.forEach((key) => pipeline.get(key));
+          const result = (await pipeline.exec()) as [Error | null, string][];
+          for (let i = skip; i < skip + limit; i++) {
+            const [err, data] = result[i];
+            if (!err && data.length) {
+              rows.push(JSON.parse(data) as T);
+            }
           }
         }
-      }
 
-      cursor = nextCursor;
-    } while (cursor !== '0');
-
-    return { data: rows };
+        cursor = nextCursor;
+      } while (cursor !== '0');
+      return { data: rows };
+    } catch (e) {
+      this.logger.error('Error fetching data from Redis', e);
+      return { data: [] };
+    }
   }
 
   async setMany<T>(

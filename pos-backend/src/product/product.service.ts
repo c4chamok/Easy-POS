@@ -45,7 +45,12 @@ export class ProductService {
     void this.addManyProductToRedis(productsFromDB);
     return {
       data: productsFromDB,
-      meta: { page, limit, dbCount, totalPages: Math.ceil(dbCount / limit) },
+      meta: {
+        page,
+        limit,
+        total: dbCount,
+        totalPages: Math.ceil(dbCount / limit),
+      },
     };
   }
 
