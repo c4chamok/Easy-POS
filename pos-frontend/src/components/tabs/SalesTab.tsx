@@ -1,12 +1,9 @@
 import { useState, useMemo } from 'react';
 import { Search, Filter, SortAsc } from 'lucide-react';
-import { usePOS } from '@/context/POSContext';
-import { useCart } from '@/context/CartContext';
 import { ProductCard } from '@/components/sales/ProductCard';
 import { CartPanel } from '@/components/sales/CartPanel';
 import { PaymentModal } from '@/components/sales/PaymentModal';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -15,19 +12,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { categories } from '@/data/mockData';
+import useProducts from '@/hooks/useProducts';
 
 type SortOption = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc' | 'stock-asc' | 'stock-desc';
 
 export function SalesTab() {
-  const { products } = usePOS();
-  const { itemCount } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState<SortOption>('name-asc');
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const { products } = useProducts();
+
 
   const filteredProducts = useMemo(() => {
-    let filtered = products.filter((product) => {
+    const filtered = products.filter((product) => {
       const matchesSearch =
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.sku.toLowerCase().includes(searchQuery.toLowerCase());

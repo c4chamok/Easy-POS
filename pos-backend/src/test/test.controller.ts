@@ -9,6 +9,11 @@ export class TestController {
     private prisma: PrismaService,
     private redis: RedisService,
   ) {}
+  @Get('hello')
+  hello() {
+    return { message: 'Hello, World!' };
+  }
+
   @Get('seed/product')
   async seedProduct() {
     const { count } = await this.prisma.product.createMany({

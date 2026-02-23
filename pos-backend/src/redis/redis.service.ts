@@ -26,25 +26,27 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
   }
 
   onModuleInit() {
-    this.redis.on('connect', () => {
-      this.logger.log('🧠 Redis connected');
-    });
+    if (this.redis.status === 'ready') {
+      this.redis.on('connect', () => {
+        this.logger.log('🧠 Redis connected');
+      });
 
-    this.redis.on('ready', () => {
-      this.logger.log('🚀 Redis ready to use');
-    });
+      this.redis.on('ready', () => {
+        this.logger.log('🚀 Redis ready to use');
+      });
 
-    this.redis.on('error', (err) => {
-      this.logger.error('Redis error', err);
-    });
+      this.redis.on('error', (err) => {
+        this.logger.error('Redis error', err);
+      });
 
-    this.redis.on('close', () => {
-      this.logger.warn('Redis connection closed');
-    });
+      this.redis.on('close', () => {
+        this.logger.warn('Redis connection closed');
+      });
 
-    this.redis.on('reconnecting', () => {
-      this.logger.warn('Redis reconnecting...');
-    });
+      this.redis.on('reconnecting', () => {
+        this.logger.warn('Redis reconnecting...');
+      });
+    }
   }
 
   async setRedis<T>(key: string, body: T, ttl?: number) {

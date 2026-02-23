@@ -10,7 +10,6 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ProductModule } from './product/product.module';
 import { RedisModule } from './redis/redis.module';
 import { TestModule } from './test/test.module';
-import { OrderModule } from './order/order.module';
 import { PrismaExceptionFilter } from './common/filters/prismaException.filter';
 import { CartModule } from './cart/cart.module';
 
@@ -24,7 +23,6 @@ import { CartModule } from './cart/cart.module';
     UsersModule,
     ProductModule,
     TestModule,
-    OrderModule,
     CartModule,
   ],
   controllers: [],

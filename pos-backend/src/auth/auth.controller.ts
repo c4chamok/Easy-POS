@@ -18,8 +18,8 @@ export class AuthController {
     return res
       .cookie('access_token', access_token, {
         httpOnly: true,
-        sameSite: 'lax',
-        secure: false,
+        sameSite: 'none',
+        secure: true,
         maxAge: 1000 * 60 * 60 * 24,
       })
       .json(rest);
