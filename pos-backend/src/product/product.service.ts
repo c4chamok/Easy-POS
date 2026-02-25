@@ -17,11 +17,12 @@ export class ProductService {
     //get many products from redis
     const { page, limit, skip } = getPagination(query);
     // const { data: products, count } = await
-    const [{ data: products }, dbCount] = await Promise.all([
+    const [{ data: products }, dbCount, dbTotal] = await Promise.all([
       this.redis.getMany<Product>('product', {
         page,
         limit,
       }),
+      this.prisma.product.count({ take: limit, skip: skip }),
       this.prisma.product.count(),
     ]);
 
@@ -31,7 +32,7 @@ export class ProductService {
         meta: {
           page,
           limit,
-          total: dbCount,
+          total: dbTotal,
           totalPages: Math.ceil(dbCount / limit),
         },
       };
@@ -48,7 +49,7 @@ export class ProductService {
       meta: {
         page,
         limit,
-        total: dbCount,
+        total: dbTotal,
         totalPages: Math.ceil(dbCount / limit),
       },
     };
@@ -65,6 +66,40 @@ export class ProductService {
       void this.redis.setRedis(`product:${id}`, product);
     }
     return product;
+  }
+
+  async searchProductsByName(name: string, query: PaginationDto) {
+    const { page, limit, skip } = getPagination(query);
+    const [products, count] = await Promise.all([
+      this.prisma.product.findMany({
+        where: {
+          name: {
+            contains: name,
+            mode: 'insensitive',
+          },
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.product.count({
+        where: {
+          name: {
+            contains: name,
+            mode: 'insensitive',
+          },
+        },
+      }),
+    ]);
+
+    return {
+      data: products,
+      meta: {
+        page,
+        limit,
+        total: count,
+        totalPages: Math.ceil(count / limit),
+      },
+    };
   }
 
   async addProduct(p: ProductAddDto) {

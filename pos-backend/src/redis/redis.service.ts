@@ -83,12 +83,20 @@ export class RedisService implements OnModuleDestroy, OnModuleInit {
         );
 
         if (keys.length) {
+          // Apply pagination BEFORE hitting Redis
+          const paginatedKeys = keys.slice(skip, skip + limit);
+
           const pipeline = this.redis.pipeline();
-          keys.forEach((key) => pipeline.get(key));
-          const result = (await pipeline.exec()) as [Error | null, string][];
-          for (let i = skip; i < skip + limit; i++) {
-            const [err, data] = result[i];
-            if (!err && data.length) {
+
+          paginatedKeys.forEach((key) => pipeline.get(key));
+
+          const result = (await pipeline.exec()) as [
+            Error | null,
+            string | null,
+          ][];
+
+          for (const [err, data] of result) {
+            if (!err && data) {
               rows.push(JSON.parse(data) as T);
             }
           }
