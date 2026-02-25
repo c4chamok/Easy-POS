@@ -12,7 +12,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { categories } from '@/data/mockData';
-import useProducts from '@/hooks/useProducts';
+// import useProducts from '@/hooks/useProducts';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { useGetProductsQuery } from '@/store/api/productsApi';
 
 type SortOption = 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc' | 'stock-asc' | 'stock-desc';
 
@@ -21,8 +23,11 @@ export function SalesTab() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [sortBy, setSortBy] = useState<SortOption>('name-asc');
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-  const { products } = useProducts();
+  const { data, isLoading: loading } = useGetProductsQuery();
 
+  const products = useMemo(() => {
+    return Array.isArray(data) ? data : [];
+  }, [data]);
 
   const filteredProducts = useMemo(() => {
     const filtered = products.filter((product) => {
@@ -109,6 +114,10 @@ export function SalesTab() {
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
+          {  loading && (
+            <div className="flex flex-col items-center justify-center h-full text-center py-12">
+              <LoadingSpinner size="lg" />
+            </div>)}
           {filteredProducts.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-center py-12">
               <p className="text-muted-foreground">No products found</p>
