@@ -2,8 +2,9 @@
 
 export interface User {
   id: string;
-  name: string;
-  role: 'admin' | 'cashier' | 'manager';
+  fullName: string;
+  email: string;
+  role: 'ADMIN' | 'SELLER';
   avatar?: string;
 }
 
@@ -23,7 +24,7 @@ export interface CartItem {
   productId: string;
   name: string;
   price: number;
-  qty: number;
+  quantity: number;
   lineTotal: number;
 }
 

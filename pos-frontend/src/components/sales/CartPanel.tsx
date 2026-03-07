@@ -1,17 +1,18 @@
 import { Minus, Plus, Trash2, ShoppingCart, CreditCard } from 'lucide-react';
-import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { updateQuantity, clearCart, removeFromCart } from '@/store/slices/cartSlice';
 
 interface CartPanelProps {
   onCheckout: () => void;
 }
 
 export function CartPanel({ onCheckout }: CartPanelProps) {
-  const { items, subtotal, grandTotal, itemCount, updateQuantity, removeFromCart, clearCart } = useCart();
-  const cartItems = Object.values(items);
+  const { grandTotal, itemCount, items: cartItems, subtotal } = useAppSelector((state) => state.cart);
+  const dispatch = useAppDispatch();
+  // const cartItems = Object.values(items);
 
   return (
     <div className="h-full flex flex-col bg-card rounded-xl shadow-card overflow-hidden">
@@ -55,14 +56,20 @@ export function CartPanel({ onCheckout }: CartPanelProps) {
                   variant="outline"
                   size="icon"
                   className="w-7 h-7"
-                  onClick={() => updateQuantity(item.productId, item.qty - 1)}
+                  onClick={() => dispatch(updateQuantity({ 
+                    productId: item.productId, 
+                    qty: item.quantity - 1 
+                  }))}
                 >
                   <Minus className="w-3 h-3" />
                 </Button>
                 <Input
                   type="number"
-                  value={item.qty}
-                  onChange={(e) => updateQuantity(item.productId, parseInt(e.target.value) || 0)}
+                  value={item.quantity}
+                  onChange={(e) => dispatch(updateQuantity({ 
+                    productId: item.productId, 
+                    qty: parseInt(e.target.value) || 0 
+                  }))}
                   className="w-12 h-7 text-center text-sm px-1"
                   min={1}
                 />
@@ -70,7 +77,10 @@ export function CartPanel({ onCheckout }: CartPanelProps) {
                   variant="outline"
                   size="icon"
                   className="w-7 h-7"
-                  onClick={() => updateQuantity(item.productId, item.qty + 1)}
+                  onClick={() => dispatch(updateQuantity({ 
+                    productId: item.productId, 
+                    qty: item.quantity + 1 
+                  }))}
                 >
                   <Plus className="w-3 h-3" />
                 </Button>
@@ -120,7 +130,7 @@ export function CartPanel({ onCheckout }: CartPanelProps) {
             </Button>
             <Button
               variant="outline"
-              onClick={clearCart}
+              onClick={() => dispatch(clearCart())}
               className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
             >
               Clear Cart

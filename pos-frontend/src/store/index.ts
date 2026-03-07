@@ -4,12 +4,14 @@ import { type TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux
 
 import authReducer from './slices/authSlice';
 import uiReducer from './slices/uiSlice';
+import cartReducer from './slices/cartSlice';
 import { productsApi } from './api/productsApi';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     ui: uiReducer,
+    cart: cartReducer,
     [productsApi.reducerPath]: productsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>

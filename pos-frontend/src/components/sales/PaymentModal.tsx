@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Banknote, CreditCard, Smartphone, Check } from 'lucide-react';
-import { useCart } from '@/context/CartContext';
 import { usePOS } from '@/context/POSContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +12,8 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { clearCart } from '@/store/slices/cartSlice';
 
 interface PaymentModalProps {
   open: boolean;
@@ -22,7 +23,8 @@ interface PaymentModalProps {
 type PaymentMethod = 'cash' | 'card' | 'mobile';
 
 export function PaymentModal({ open, onClose }: PaymentModalProps) {
-  const { items, grandTotal, clearCart } = useCart();
+  const dispatch = useAppDispatch();
+  const { items, grandTotal } = useAppSelector((state) => state.cart);
   const { addOrder } = usePOS();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [amountPaid, setAmountPaid] = useState<string>(grandTotal.toString());
@@ -43,7 +45,7 @@ export function PaymentModal({ open, onClose }: PaymentModalProps) {
       items: cartItems.map(item => ({
         productId: item.productId,
         name: item.name,
-        qty: item.qty,
+        qty: item.quantity,
         price: item.price,
       })),
       total: grandTotal,
@@ -58,7 +60,7 @@ export function PaymentModal({ open, onClose }: PaymentModalProps) {
       description: `Order has been placed successfully.${change > 0 ? ` Change: ৳${change.toFixed(2)}` : ''}`,
     });
 
-    clearCart();
+    dispatch(clearCart());
     onClose();
     setAmountPaid('');
     setCustomerName('');
@@ -85,7 +87,7 @@ export function PaymentModal({ open, onClose }: PaymentModalProps) {
               {cartItems.map((item) => (
                 <div key={item.productId} className="flex justify-between text-sm">
                   <span>
-                    {item.name} × {item.qty}
+                    {item.name} × {item.quantity}
                   </span>
                   <span>৳{item.lineTotal}</span>
                 </div>

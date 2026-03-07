@@ -1,7 +1,6 @@
 import { Info, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { type Product } from '@/types/pos';
-import { useCart } from '@/context/CartContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,19 +10,22 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { addToCart } from '@/store/slices/cartSlice';
 
 interface ProductCardProps {
   product: Product;
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const { addToCart, items } = useCart();
-  const isInCart = !!items[product.id];
+  const { items } = useAppSelector((state) => state.cart);
+  const dispatch = useAppDispatch();
+  const isInCart = items.some((item) => item.productId === product.id);
   const isOutOfStock = product.status === 'out-of-stock';
 
   const handleClick = () => {
     if (!isOutOfStock) {
-      addToCart(product);
+      dispatch(addToCart(product));
     }
   };
 

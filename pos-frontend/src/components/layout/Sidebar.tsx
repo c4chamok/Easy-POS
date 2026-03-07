@@ -8,7 +8,6 @@ import {
   Store
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { usePOS } from '@/context/POSContext';
 import { type TabType } from '@/types/pos';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -19,17 +18,25 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useState } from 'react';
+import { Link, useLocation } from 'react-router';
+import { useAppSelector } from '@/store';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
 
-const navItems: { id: TabType; label: string; icon: typeof LayoutDashboard }[] = [
-  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-  { id: 'sales', label: 'Sales', icon: ShoppingCart },
-  { id: 'inventory', label: 'Inventory', icon: Package },
-  { id: 'orders', label: 'Orders', icon: ClipboardList },
+const navItems: { id: TabType; label: string; path: string; icon: typeof LayoutDashboard }[] = [
+  { id: 'overview', path: '/',label: 'Overview', icon: LayoutDashboard },
+  { id: 'sales', path: '/sales', label: 'Sales', icon: ShoppingCart },
+  { id: 'inventory', path: '/inventory', label: 'Inventory', icon: Package },
+  { id: 'orders', path: '/orders', label: 'Orders', icon: ClipboardList },
 ];
 
 export function Sidebar() {
-  const { activeTab, setActiveTab, user } = usePOS();
+  // const { user } = usePOS();
+  const { user } = useAppSelector(state => state.auth);
   const [collapsed, setCollapsed] = useState(false);
+  const { pathname } = useLocation();
+
+  console.log('Sidebar user:', user);
+  if (!user) return <LoadingSpinner/>;
 
   return (
     <aside
@@ -68,11 +75,11 @@ export function Sidebar() {
       <nav className="flex-1 p-3 space-y-1">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = activeTab === item.id;
+          const isActive = pathname === item.path;
           return (
-            <button
+            <Link
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              to={item.path}
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
                 isActive
@@ -85,7 +92,7 @@ export function Sidebar() {
               {!collapsed && (
                 <span className="font-medium animate-fade-in">{item.label}</span>
               )}
-            </button>
+            </Link>
           );
         })}
       </nav>
@@ -103,12 +110,12 @@ export function Sidebar() {
               <Avatar className="w-9 h-9 border-2 border-sidebar-accent">
                 <AvatarImage src={user.avatar} />
                 <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-sm font-medium">
-                  {user.name.charAt(0).toUpperCase()}
+                  {user.fullName.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               {!collapsed && (
                 <div className="text-left animate-fade-in">
-                  <p className="font-medium text-sm">{user.name}</p>
+                  <p className="font-medium text-sm">{user.fullName}</p>
                   <p className="text-xs text-sidebar-muted capitalize">{user.role}</p>
                 </div>
               )}
