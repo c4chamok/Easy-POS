@@ -43,6 +43,17 @@ export class CartController {
     return ApiResponse.success(item, 'item added to cart');
   }
 
+  @Post('sync')
+  @UseGuards(AuthGuard)
+  async syncCart(
+    @Request() req: AuthenticatedRequest,
+    @Body() body: CartAddDto[],
+  ) {
+    const userId = this.getUserId(req);
+    const item = await this.cartService.syncCartItems(userId, body);
+    return ApiResponse.success(item, 'cart items synced');
+  }
+
   @Put('')
   @UseGuards(AuthGuard)
   async updateCartItem(

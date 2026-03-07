@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
-import { CartUpdateDto } from './cart.dto';
+import { CartAddDto, CartUpdateDto } from './cart.dto';
 import { Prisma } from '../../generated/prisma/client';
 import { ProductService } from '../product/product.service';
 
@@ -30,12 +30,16 @@ export class CartService {
 
   async getCart(userId: string) {
     const key = this.cartKey(userId);
-    const cached =
-      await this.redis.getRedis<
+    const [cached, dbCartCount] = await Promise.all([
+      this.redis.getRedis<
         Prisma.CartGetPayload<{ include: { product: true } }>[]
-      >(key);
+      >(key),
+      this.prisma.cart.count({ where: { userId } }),
+    ]);
 
-    if (cached) return cached;
+    if (cached?.length === dbCartCount) {
+      return cached;
+    }
 
     return this.refreshCartCache(userId);
   }
@@ -97,6 +101,20 @@ export class CartService {
   //   return item;
   // }
 
+  async syncCartItems(userId: string, items: CartAddDto[]) {
+    await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+      await tx.cart.deleteMany({ where: { userId } });
+
+      await tx.cart.createMany({
+        data: items.map((i) => ({
+          userId,
+          productId: i.productId,
+          quantity: i.quantity,
+        })),
+      });
+    });
+  }
+
   async updateCartItem(userId: string, dto: CartUpdateDto) {
     const product = await this.productService.findProductById(dto.productId);
     if (!product) {
@@ -116,13 +134,11 @@ export class CartService {
       where: { userId_productId: { userId, productId: dto.productId } },
       update: {
         quantity: dto.quantity,
-        unitPrice: product.price,
       },
       create: {
         userId,
         productId: dto.productId,
         quantity: dto.quantity,
-        unitPrice: product.price,
       },
       include: { product: true },
     });

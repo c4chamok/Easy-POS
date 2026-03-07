@@ -75,7 +75,6 @@ model Cart {
   userId    String
   productId String
   quantity  Int
-  unitPrice Float
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

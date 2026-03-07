@@ -8,10 +8,6 @@ export class CartAddDto {
   @IsNotEmpty()
   @IsNumber()
   quantity!: number;
-
-  @IsNotEmpty()
-  @IsNumber()
-  unitPrice!: number;
 }
 
 export class CartUpdateDto {
