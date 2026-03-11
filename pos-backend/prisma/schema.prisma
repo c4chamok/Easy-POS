@@ -49,7 +49,7 @@ model Sale {
   total         Float
   paymentMethod PaymentType
   customerName  String?
-  status        PaymentStatus @default(PENDING)
+  status        SaleStatus @default(PENDING)
   createdAt     DateTime      @default(now())
 
   items SaleItem[]
@@ -91,7 +91,7 @@ enum PaymentType {
   MOBILE
 }
 
-enum PaymentStatus {
+enum SaleStatus {
   PENDING
   COMPLETED
 }

@@ -12,6 +12,7 @@ import { RedisModule } from './redis/redis.module';
 import { TestModule } from './test/test.module';
 import { PrismaExceptionFilter } from './common/filters/prismaException.filter';
 import { CartModule } from './cart/cart.module';
+import { OrderModule } from './order/order.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { CartModule } from './cart/cart.module';
     ProductModule,
     TestModule,
     CartModule,
+    OrderModule,
   ],
   controllers: [],
   providers: [

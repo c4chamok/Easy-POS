@@ -1,0 +1,4 @@
+checkout:
+1. get All the cart items of the user with product details from db
+2. loop the cart items and add a subtotal for each item and calculate a Total
+3. 
