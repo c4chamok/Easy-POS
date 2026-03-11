@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Banknote, CreditCard, Smartphone, Check } from 'lucide-react';
-import { usePOS } from '@/context/POSContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +12,8 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/store';
+// import { clearCart } from '@/store/slices/cartSlice';
+import { useCheckoutMutation } from '@/store/api/orderApi';
 import { clearCart } from '@/store/slices/cartSlice';
 
 interface PaymentModalProps {
@@ -20,56 +21,53 @@ interface PaymentModalProps {
   onClose: () => void;
 }
 
-type PaymentMethod = 'cash' | 'card' | 'mobile';
+type PaymentMethod = 'CASH' | 'CARD' | 'ONLINE';
 
 export function PaymentModal({ open, onClose }: PaymentModalProps) {
   const dispatch = useAppDispatch();
   const { items, grandTotal } = useAppSelector((state) => state.cart);
-  const { addOrder } = usePOS();
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
+  const [checkout] = useCheckoutMutation()
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
   const [amountPaid, setAmountPaid] = useState<string>(grandTotal.toString());
   const [customerName, setCustomerName] = useState('');
 
   const change = parseFloat(amountPaid || '0') - grandTotal;
   const cartItems = Object.values(items);
 
-  const handleConfirm = () => {
-    if (parseFloat(amountPaid) < grandTotal && paymentMethod === 'cash') {
+  //handle confirm payment
+  const handleConfirm = async () => {
+    if (parseFloat(amountPaid) < grandTotal && paymentMethod === 'CASH') {
       toast.warning('Insufficient Amount', {
         description: 'Amount paid is less than the total.',
       });
       return;
     }
 
-    addOrder({
-      items: cartItems.map(item => ({
-        productId: item.productId,
-        name: item.name,
-        qty: item.quantity,
-        price: item.price,
-      })),
-      total: grandTotal,
-      paidAmount: parseFloat(amountPaid),
-      fullPaid: parseFloat(amountPaid) >= grandTotal,
-      status: 'pending',
-      paymentMethod,
-      customerName: customerName || undefined,
-    });
+    try {      
+      await checkout({
+        paymentMethod: paymentMethod,
+        paidAmount: Number.parseFloat(amountPaid),
+        customerName,
+      })
+      toast('Order Created!',{
+        description: `Order has been placed successfully.${change > 0 ? ` Change: ৳${change.toFixed(2)}` : ''}`,
+      });
+  
+      dispatch(clearCart());
+      onClose();
+      setAmountPaid('');
+      setCustomerName('');
+    } catch (error) {
+      console.log('checkout Error: ', error);
+        toast.error('could not complete order')      
+    }
 
-    toast('Order Created!',{
-      description: `Order has been placed successfully.${change > 0 ? ` Change: ৳${change.toFixed(2)}` : ''}`,
-    });
-
-    dispatch(clearCart());
-    onClose();
-    setAmountPaid('');
-    setCustomerName('');
   };
 
   const paymentMethods = [
-    { id: 'cash' as const, label: 'Cash', icon: Banknote },
-    { id: 'card' as const, label: 'Card', icon: CreditCard },
-    { id: 'mobile' as const, label: 'Mobile', icon: Smartphone },
+    { id: 'CASH' as const, label: 'Cash', icon: Banknote },
+    { id: 'CARD' as const, label: 'Card', icon: CreditCard },
+    { id: 'ONLINE' as const, label: 'Mobile', icon: Smartphone },
   ];
 
   return (
@@ -133,7 +131,7 @@ export function PaymentModal({ open, onClose }: PaymentModalProps) {
           </div>
 
           {/* Amount Paid (for cash) */}
-          {paymentMethod === 'cash' && (
+          {paymentMethod === 'CASH' && (
             <div className="space-y-2">
               <Label htmlFor="amount">Amount Paid</Label>
               <Input

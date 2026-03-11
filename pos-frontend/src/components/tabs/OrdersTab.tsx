@@ -1,10 +1,8 @@
 import { useState } from 'react';
-import { Search, ClipboardList, CreditCard, Check } from 'lucide-react';
-import { usePOS } from '@/context/POSContext';
+import { Search, ClipboardList } from 'lucide-react';
 import type { Order } from '@/types/pos';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+
 import {
   Table,
   TableBody,
@@ -22,12 +20,16 @@ import {
 } from '@/components/ui/select';
 import { OrderPaymentModal } from '@/components/orders/OrderPaymentModal';
 import { cn } from '@/lib/utils';
+import { useGetOrdersQuery } from '@/store/api/orderApi';
 
 export function OrdersTab() {
-  const { orders, updateOrderStatus } = usePOS();
+  // const { orders, updateOrderStatus } = usePOS();
+  const { data } = useGetOrdersQuery();
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'delivered'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'PENDING' | 'PAID'>('all');
   const [payingOrder, setPayingOrder] = useState<Order | null>(null);
+
+  const orders = data ?? [];
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -65,7 +67,7 @@ export function OrdersTab() {
             className="pl-9"
           />
         </div>
-        <Select value={statusFilter} onValueChange={(v: 'all' | 'pending' | 'delivered') => setStatusFilter(v)}>
+        <Select value={statusFilter} onValueChange={(v: 'all' | 'PENDING' | 'PAID') => setStatusFilter(v)}>
           <SelectTrigger className="w-[150px] bg-card">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -87,9 +89,9 @@ export function OrdersTab() {
               <TableHead>Customer</TableHead>
               <TableHead className="text-center">Items</TableHead>
               <TableHead className="text-right">Total</TableHead>
-              <TableHead className="text-center">Payment</TableHead>
+              {/* <TableHead className="text-center">Payment</TableHead> */}
               <TableHead className="text-center">Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              {/* <TableHead className="text-right">Actions</TableHead> */}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -110,7 +112,7 @@ export function OrdersTab() {
                   <TableCell>{order.customerName || '-'}</TableCell>
                   <TableCell className="text-center">{order.items.length}</TableCell>
                   <TableCell className="text-right font-medium">৳{order.total}</TableCell>
-                  <TableCell className="text-center">
+                  {/* <TableCell className="text-center">
                     <Badge
                       className={cn(
                         order.fullPaid
@@ -121,28 +123,28 @@ export function OrdersTab() {
                     >
                       {order.fullPaid ? 'Paid' : `Due: ৳${order.total - order.paidAmount}`}
                     </Badge>
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell className="text-center">
                     <Select
                       value={order.status}
-                      onValueChange={(v: Order['status']) => updateOrderStatus(order.id, v)}
+                      onValueChange={(v: Order['status']) => console.log(order.id, v)}
                     >
                       <SelectTrigger
                         className={cn(
                           'w-[110px] h-8 text-xs',
-                          order.status === 'pending' && 'bg-warning/10 text-warning border-warning/20',
-                          order.status === 'delivered' && 'bg-success/10 text-success border-success/20'
+                          order.status === 'PENDING' && 'bg-warning/10 text-warning border-warning/20',
+                          order.status === 'COMPLETED' && 'bg-success/10 text-success border-success/20'
                         )}
                       >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-popover z-50">
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="delivered">Delivered</SelectItem>
+                        <SelectItem value="PENDING">Pending</SelectItem>
+                        <SelectItem value="COMPLETED">Delivered</SelectItem>
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell className="text-right">
+                  {/* <TableCell className="text-right">
                     {!order.fullPaid && (
                       <Button
                         size="sm"
@@ -160,7 +162,7 @@ export function OrdersTab() {
                         Complete
                       </Badge>
                     )}
-                  </TableCell>
+                  </TableCell> */}
                 </TableRow>
               ))
             )}

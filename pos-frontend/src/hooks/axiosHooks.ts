@@ -13,10 +13,12 @@ const useAxiosInstance = () => {
             // Only handle AxiosError
             if (error instanceof AxiosError) {
                 const customMessage = error.response?.data?.error?.message;
-                dispatch(setAuthStatus({isAuthenticated: false}))
                 if (customMessage) {
                     // Override the original message with the backend error message
                     error.message = customMessage;
+                }
+                if (error.status === 403 || error.status === 401) {                    
+                    dispatch(setAuthStatus({isAuthenticated: false}))
                 }
             } else {
                 console.error("Unexpected error:", error);

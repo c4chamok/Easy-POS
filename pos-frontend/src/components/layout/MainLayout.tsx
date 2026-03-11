@@ -1,9 +1,12 @@
+import useCart from '@/hooks/useCart';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { Outlet } from 'react-router';
 
 
 export function MainLayout() {
+  useCart(); // Initialize cart synchronization across tabs
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       <Sidebar />

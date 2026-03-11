@@ -12,7 +12,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { categories } from '@/data/mockData';
-// import useProducts from '@/hooks/useProducts';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { useGetProductsQuery } from '@/store/api/productsApi';
 
