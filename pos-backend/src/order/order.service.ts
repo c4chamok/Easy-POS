@@ -3,7 +3,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { SaleStatus, PaymentType, Prisma } from '../../generated/prisma/client';
+import {
+  SaleStatus,
+  PaymentType,
+  Prisma,
+  $Enums,
+} from '../../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { CheckoutDto, CompletePaymentDto } from './order.dto';
@@ -115,6 +120,13 @@ export class OrderService {
 
     await tx.cart.deleteMany({ where: { userId } });
     return { sale, productIds: saleItemsData.map((item) => item.productId) };
+  }
+
+  async changeStatusService(orderId: string, status: $Enums.SaleStatus) {
+    return this.prisma.sale.update({
+      where: { id: orderId },
+      data: { status },
+    });
   }
 
   async checkoutFromCart(userId: string, dto: CheckoutDto) {

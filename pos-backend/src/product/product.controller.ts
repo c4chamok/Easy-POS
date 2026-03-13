@@ -33,9 +33,9 @@ export class ProductController {
     return this.productService.addProduct(p);
   }
 
-  @Put()
-  updateProduct(@Body() p: Partial<Product>) {
-    return this.productService.updateProduct(p);
+  @Put(':id')
+  updateProduct(@Param('id') id: string, @Body() p: Partial<Product>) {
+    return this.productService.updateProduct(id, p);
   }
 
   @Delete(':id')

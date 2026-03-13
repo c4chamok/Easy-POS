@@ -15,6 +15,7 @@ import { ApiResponse } from '../common/utils/api-response';
 import { CheckoutDto, CompletePaymentDto } from './order.dto';
 import { OrderService } from './order.service';
 import { PaginationDto } from '../common/dto/pagination.dto';
+import { $Enums } from '../../generated/prisma/browser';
 
 @Controller('api/orders')
 export class OrderController {
@@ -44,6 +45,16 @@ export class OrderController {
   ) {
     const sale = await this.orderService.completePayment(orderId, body);
     return ApiResponse.success(sale, 'payment completed successfully');
+  }
+
+  @Patch(':orderId/status')
+  @UseGuards(AuthGuard)
+  async changeStatus(
+    @Param('orderId') orderId: string,
+    @Body('status') status: $Enums.SaleStatus,
+  ) {
+    const sale = await this.orderService.changeStatusService(orderId, status);
+    return ApiResponse.success(sale, 'status changed successfully');
   }
 
   @Get('')

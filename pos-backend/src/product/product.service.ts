@@ -117,9 +117,9 @@ export class ProductService {
     }
   }
 
-  async updateProduct(p: Partial<Product>) {
+  async updateProduct(id: string, p: Partial<Product>) {
     const product = await this.prisma.product.update({
-      where: { id: p.id },
+      where: { id },
       data: p,
     });
     await this.redis.setRedis(`product:${p.id}`, product);
