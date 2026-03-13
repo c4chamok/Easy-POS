@@ -33,7 +33,7 @@ export class ProductService {
           page,
           limit,
           total: dbTotal,
-          totalPages: Math.ceil(dbCount / limit),
+          totalPages: Math.ceil(dbTotal / limit),
         },
       };
     }
@@ -50,7 +50,7 @@ export class ProductService {
         page,
         limit,
         total: dbTotal,
-        totalPages: Math.ceil(dbCount / limit),
+        totalPages: Math.ceil(dbTotal / limit),
       },
     };
   }

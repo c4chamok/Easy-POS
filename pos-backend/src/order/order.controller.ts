@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -13,6 +14,7 @@ import { AuthenticatedRequest } from '../auth/auth.interface';
 import { ApiResponse } from '../common/utils/api-response';
 import { CheckoutDto, CompletePaymentDto } from './order.dto';
 import { OrderService } from './order.service';
+import { PaginationDto } from '../common/dto/pagination.dto';
 
 @Controller('api/orders')
 export class OrderController {
@@ -45,10 +47,10 @@ export class OrderController {
   }
 
   @Get('')
-  @UseGuards(AuthGuard)
-  async fetchOrders() {
-    const sales = await this.orderService.listOrders();
-    return ApiResponse.success(sales, 'orders fetched successfully');
+  // @UseGuards(AuthGuard)
+  async fetchOrders(@Query() query: PaginationDto) {
+    const { data, meta } = await this.orderService.listOrders(query);
+    return ApiResponse.success(data, 'orders fetched successfully', meta);
   }
 
   @Get(':orderId')

@@ -8,6 +8,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
 import { CheckoutDto, CompletePaymentDto } from './order.dto';
 import { Sql } from '../../generated/prisma/internal/prismaNamespace';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { getPagination } from '../common/utils/pagination';
 
 @Injectable()
 export class OrderService {
@@ -128,17 +130,32 @@ export class OrderService {
     return sale;
   }
 
-  async listOrders() {
-    return this.prisma.sale.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        items: {
-          include: {
-            product: true,
+  async listOrders(dto: PaginationDto) {
+    const { limit, skip, page } = getPagination(dto);
+    const [orders, total] = await Promise.all([
+      this.prisma.sale.findMany({
+        orderBy: { createdAt: 'desc' },
+        include: {
+          items: {
+            include: {
+              product: true,
+            },
           },
         },
+        skip,
+        take: limit,
+      }),
+      this.prisma.sale.count(),
+    ]);
+    return {
+      data: orders,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-    });
+    };
   }
 
   async getOrderById(orderId: string) {
