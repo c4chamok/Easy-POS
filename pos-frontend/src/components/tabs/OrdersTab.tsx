@@ -21,15 +21,24 @@ import {
 import { OrderPaymentModal } from '@/components/orders/OrderPaymentModal';
 import { cn } from '@/lib/utils';
 import { useGetOrdersQuery } from '@/store/api/orderApi';
+import CustomPagination, { type IPagination } from '../common/CustomPagination';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 export function OrdersTab() {
   // const { orders, updateOrderStatus } = usePOS();
-  const { data } = useGetOrdersQuery();
+  const [pagination, setPagination] = useState<IPagination>({
+    currentPage: 1,
+    limit: 10
+  });
+  const { data, isFetching: isLoading } = useGetOrdersQuery(pagination);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'PENDING' | 'PAID'>('all');
   const [payingOrder, setPayingOrder] = useState<Order | null>(null);
 
-  const orders = data ?? [];
+  const { orders, meta } = data ?? { orders: [], meta: { total: 0, page: 1, limit: 10 } };
+  const totalPages = Math.ceil(meta?.total / meta.limit);
+
+  // console.log(meta.page, pagination.currentPage);
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -95,24 +104,33 @@ export function OrdersTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredOrders.length === 0 ? (
+            {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-12">
-                  <div className="flex flex-col items-center gap-2">
-                    <ClipboardList className="w-12 h-12 text-muted-foreground/30" />
-                    <p className="text-muted-foreground">No orders found</p>
+                {/* Span the cell across all columns to center the message */}
+                <TableCell colSpan={8} className="h-24 text-center">
+                  <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                    <LoadingSpinner size="lg" />
                   </div>
                 </TableCell>
-              </TableRow>
+              </TableRow>) :
+              filteredOrders.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={8} className="text-center py-12">
+                <div className="flex flex-col items-center gap-2">
+                  <ClipboardList className="w-12 h-12 text-muted-foreground/30" />
+                  <p className="text-muted-foreground">No orders found</p>
+                </div>
+              </TableCell>
+            </TableRow>
             ) : (
-              filteredOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell className="text-muted-foreground">{formatDate(order.createdAt)}</TableCell>
-                  <TableCell>{order.customerName || '-'}</TableCell>
-                  <TableCell className="text-center">{order.items.length}</TableCell>
-                  <TableCell className="text-right font-medium">৳{order.total}</TableCell>
-                  {/* <TableCell className="text-center">
+                filteredOrders.map((order) => (
+            <TableRow key={order.id}>
+              <TableCell className="font-medium">{order.id}</TableCell>
+              <TableCell className="text-muted-foreground">{formatDate(order.createdAt)}</TableCell>
+              <TableCell>{order.customerName || '-'}</TableCell>
+              <TableCell className="text-center">{order.items.length}</TableCell>
+              <TableCell className="text-right font-medium">৳{order.total}</TableCell>
+              {/* <TableCell className="text-center">
                     <Badge
                       className={cn(
                         order.fullPaid
@@ -124,27 +142,27 @@ export function OrdersTab() {
                       {order.fullPaid ? 'Paid' : `Due: ৳${order.total - order.paidAmount}`}
                     </Badge>
                   </TableCell> */}
-                  <TableCell className="text-center">
-                    <Select
-                      value={order.status}
-                      onValueChange={(v: Order['status']) => console.log(order.id, v)}
-                    >
-                      <SelectTrigger
-                        className={cn(
-                          'w-[110px] h-8 text-xs',
-                          order.status === 'PENDING' && 'bg-warning/10 text-warning border-warning/20',
-                          order.status === 'COMPLETED' && 'bg-success/10 text-success border-success/20'
-                        )}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-popover z-50">
-                        <SelectItem value="PENDING">Pending</SelectItem>
-                        <SelectItem value="COMPLETED">Delivered</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  {/* <TableCell className="text-right">
+              <TableCell className="text-center">
+                <Select
+                  value={order.status}
+                  onValueChange={(v: Order['status']) => console.log(order.id, v)}
+                >
+                  <SelectTrigger
+                    className={cn(
+                      'w-[110px] h-8 text-xs',
+                      order.status === 'PENDING' && 'bg-warning/10 text-warning border-warning/20',
+                      order.status === 'COMPLETED' && 'bg-success/10 text-success border-success/20'
+                    )}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="COMPLETED">Delivered</SelectItem>
+                  </SelectContent>
+                </Select>
+              </TableCell>
+              {/* <TableCell className="text-right">
                     {!order.fullPaid && (
                       <Button
                         size="sm"
@@ -163,11 +181,12 @@ export function OrdersTab() {
                       </Badge>
                     )}
                   </TableCell> */}
-                </TableRow>
-              ))
-            )}
+            </TableRow>
+            ))
+              )}
           </TableBody>
         </Table>
+        <CustomPagination totalPages={totalPages} onChange={(p) => setPagination(p)} />
       </div>
 
       {/* Payment Modal */}

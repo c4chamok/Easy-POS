@@ -2,6 +2,7 @@
 
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { Product } from '@/types/pos';
+import type { IPagination } from '@/components/common/CustomPagination';
 
 type ProductResponse = {
   success: boolean;
@@ -26,21 +27,8 @@ export const productsApi = createApi({
   endpoints: (builder) => ({
 
     // ✅ GET PRODUCTS
-    getProducts: builder.query<Product[], void>({
-      query: () => `/products?limit=1000&page=1`,
-
-      transformResponse: (res: ProductResponse) => {
-        return res.data.map((item) => ({
-          ...item,
-          status:
-            item.stockQty === 0
-              ? 'out-of-stock'
-              : item.stockQty < 10
-                ? 'low-stock'
-                : 'in-stock',
-        }));
-      },
-
+    getProducts: builder.query<ProductResponse, IPagination | void>({
+      query: (dto) => `/products?page=${dto?.currentPage ?? 1}&limit=${dto?.limit ?? 1000}`,
       providesTags: ['Products'],
     }),
 

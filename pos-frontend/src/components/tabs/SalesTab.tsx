@@ -24,9 +24,8 @@ export function SalesTab() {
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const { data, isLoading: loading } = useGetProductsQuery();
 
-  const products = useMemo(() => {
-    return Array.isArray(data) ? data : [];
-  }, [data]);
+  const { data: products } = data ?? { data: [], meta: { total: 0, page: 1, limit: 10 } };
+  // const totalPages = Math.ceil(meta?.total / meta.limit);
 
   const filteredProducts = useMemo(() => {
     const filtered = products.filter((product) => {

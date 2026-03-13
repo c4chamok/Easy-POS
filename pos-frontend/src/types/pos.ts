@@ -17,7 +17,7 @@ export interface Product {
   stockQty: number;
   image: string;
   description?: string;
-  status: 'in-stock' | 'low-stock' | 'out-of-stock';
+  status?: 'in-stock' | 'low-stock' | 'out-of-stock';
 }
 
 export interface CartItem {

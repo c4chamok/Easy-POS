@@ -14,18 +14,23 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import { addToCart } from '@/store/slices/cartSlice';
 
 interface ProductCardProps {
-  product: Product;
+  product: Omit<Product, 'status'>
 }
 
 export function ProductCard({ product }: ProductCardProps) {
   const { items } = useAppSelector((state) => state.cart);
   const dispatch = useAppDispatch();
   const isInCart = items.some((item) => item.productId === product.id);
-  const isOutOfStock = product.status === 'out-of-stock';
+  const isOutOfStock = product.stockQty === 0;
+  const status = product.stockQty === 0
+              ? 'out-of-stock'
+              : product.stockQty < 10
+                ? 'low-stock'
+                : 'in-stock';
 
   const handleClick = () => {
     if (!isOutOfStock) {
-      dispatch(addToCart(product));
+      dispatch(addToCart({ ...product, status }));
     }
   };
 
@@ -92,15 +97,15 @@ export function ProductCard({ product }: ProductCardProps) {
       <Badge
         className={cn(
           'absolute top-2 left-2 text-xs',
-          product.status === 'in-stock' && 'bg-success/10 text-success border-success/20',
-          product.status === 'low-stock' && 'bg-warning/10 text-warning border-warning/20',
-          product.status === 'out-of-stock' && 'bg-destructive/10 text-destructive border-destructive/20'
+          status === 'in-stock' && 'bg-success/10 text-success border-success/20',
+          status === 'low-stock' && 'bg-warning/10 text-warning border-warning/20',
+          status === 'out-of-stock' && 'bg-destructive/10 text-destructive border-destructive/20'
         )}
         variant="outline"
       >
-        {product.status === 'in-stock' && 'In Stock'}
-        {product.status === 'low-stock' && 'Low Stock'}
-        {product.status === 'out-of-stock' && 'Out of Stock'}
+        {status === 'in-stock' && 'In Stock'}
+        {status === 'low-stock' && 'Low Stock'}
+        {status === 'out-of-stock' && 'Out of Stock'}
       </Badge>
 
       {/* Cart Indicator */}

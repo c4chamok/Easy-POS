@@ -1,3 +1,4 @@
+import type { IPagination } from '@/components/common/CustomPagination'
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 
 export interface CheckoutDto {
@@ -26,6 +27,17 @@ export interface Sale {
   createdAt: string
   items: SaleItem[]
 }
+
+type OrderResponse = {
+  success: boolean;
+  message: string;
+  data: Sale[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+  };
+};
 
 export const orderApi = createApi({
   reducerPath: 'orderApi',
@@ -64,10 +76,13 @@ export const orderApi = createApi({
         }
       }),
 
-    getOrders: builder.query<Sale[], void>({
-      query: () => '/orders',
+    getOrders: builder.query<{orders: Sale[]; meta: OrderResponse['meta']}, IPagination>({
+      query: (dto) => `orders?page=${dto.currentPage}&limit=${dto.limit}`,
       providesTags: ['Orders'],
-      transformResponse: (res: { success: boolean ; message: string; data: Sale[]})=> res.data,
+      transformResponse: (res: OrderResponse)=> ({
+        orders: res.data,
+        meta: res.meta,
+      }),
     }),
 
     getOrder: builder.query<Sale, string>({
