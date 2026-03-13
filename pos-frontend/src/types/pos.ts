@@ -34,7 +34,7 @@ export interface Order {
   total: number;
   paidAmount: number;
   fullPaid: boolean;
-  status: 'pending' | 'delivered';
+  status: 'PENDING' | 'COMPLETED';
   paymentMethod?: 'cash' | 'card' | 'mobile';
   createdAt: string;
   customerName?: string;

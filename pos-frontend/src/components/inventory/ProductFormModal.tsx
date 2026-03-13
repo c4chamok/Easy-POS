@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { usePOS } from '@/context/POSContext';
+import { useState } from 'react';
 import { type Product } from '@/types/pos';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,50 +19,29 @@ import {
 } from '@/components/ui/select';
 import { categories } from '@/data/mockData';
 import { toast } from 'sonner';
+import { useCreateProductMutation, useUpdateProductMutation } from '@/store/api/productsApi';
 
 interface ProductFormModalProps {
   open: boolean;
   onClose: () => void;
-  product?: Product | null;
+  product?: Omit<Product, 'status'> | null;
 }
 
 export function ProductFormModal({ open, onClose, product }: ProductFormModalProps) {
-  const { addProduct, updateProduct } = usePOS();
+  const [createProduct] = useCreateProductMutation()
+  const [updateProduct] = useUpdateProductMutation();
   const isEditing = !!product;
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Omit<Product, 'status'>>(product ?? {
     name: '',
     sku: '',
     category: 'Beverages',
-    price: '',
-    stockQty: '',
+    price: 0,
+    stockQty: 0,
     image: '',
     description: '',
+    id: '',
   });
-
-  useEffect(() => {
-    if (product) {
-      setFormData({
-        name: product.name,
-        sku: product.sku,
-        category: product.category,
-        price: product.price.toString(),
-        stockQty: product.stockQty.toString(),
-        image: product.image,
-        description: product.description || '',
-      });
-    } else {
-      setFormData({
-        name: '',
-        sku: '',
-        category: 'Beverages',
-        price: '',
-        stockQty: '',
-        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop',
-        description: '',
-      });
-    }
-  }, [product, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,24 +57,41 @@ export function ProductFormModal({ open, onClose, product }: ProductFormModalPro
       name: formData.name,
       sku: formData.sku,
       category: formData.category,
-      price: parseFloat(formData.price),
-      stockQty: parseInt(formData.stockQty),
+      price: formData.price,
+      stockQty: formData.stockQty,
       image: formData.image,
       description: formData.description,
     };
 
     if (isEditing && product) {
-      updateProduct(product.id, productData);
-      toast.success('Product Updated', {
-        description: `${formData.name} has been updated successfully.`,
-      });
+      try {
+        updateProduct({ id: product.id, data: productData });
+        toast.success('Product Updated', {
+          description: `${formData.name} has been updated successfully.`,
+        });
+      } catch (e) {
+        if (e instanceof Error) {
+          console.error(e);
+          toast.error(`Update Error`, {
+            description: `${e.message}`
+          })
+        }
+      }
     } else {
-      addProduct(productData);
-      toast.success('Product Added', {
-        description: `${formData.name} has been added to inventory.`,
-      });
+      try {
+        createProduct(productData);
+        toast.success('Product Added', {
+          description: `${formData.name} has been added to inventory.`,
+        });
+      } catch (e) {
+        if (e instanceof Error) {
+          console.error(e);
+          toast.error(`Create Error`, {
+            description: `${e.message}`
+          })
+        }
+      }
     }
-
     onClose();
   };
 
@@ -155,7 +150,7 @@ export function ProductFormModal({ open, onClose, product }: ProductFormModalPro
                 id="price"
                 type="number"
                 value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
                 placeholder="0"
                 min="0"
               />
@@ -166,7 +161,7 @@ export function ProductFormModal({ open, onClose, product }: ProductFormModalPro
                 id="stock"
                 type="number"
                 value={formData.stockQty}
-                onChange={(e) => setFormData({ ...formData, stockQty: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, stockQty: parseInt(e.target.value) })}
                 placeholder="0"
                 min="0"
               />
@@ -195,10 +190,10 @@ export function ProductFormModal({ open, onClose, product }: ProductFormModalPro
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1 cursor-pointer">
               Cancel
             </Button>
-            <Button type="submit" className="flex-1">
+            <Button type="submit" className="flex-1 cursor-pointer">
               {isEditing ? 'Update Product' : 'Add Product'}
             </Button>
           </div>

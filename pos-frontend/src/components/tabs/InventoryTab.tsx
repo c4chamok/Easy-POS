@@ -24,10 +24,11 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ProductFormModal } from '@/components/inventory/ProductFormModal';
 import { cn } from '@/lib/utils';
-import { useGetProductsQuery } from '@/store/api/productsApi';
+import { useDeleteProductMutation, useGetProductsQuery } from '@/store/api/productsApi';
 import type { IPagination } from '../common/CustomPagination';
 import CustomPagination from '../common/CustomPagination';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { toast } from 'sonner';
 
 export function InventoryTab() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,6 +42,7 @@ export function InventoryTab() {
   const { data, isFetching: isLoading } = useGetProductsQuery(pagination);
   const { data: products, meta } = data ?? { data: [], meta: { total: 0, page: 1, limit: 10 } };
   const totalPages = Math.ceil(meta?.total / meta.limit);
+  const [deleteProduct] = useDeleteProductMutation();
 
   const filteredProducts = products.filter(
     (product) =>
@@ -49,9 +51,22 @@ export function InventoryTab() {
       product.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (deletingProduct) {
       setDeletingProduct(null);
+      try {
+        await deleteProduct(deletingProduct.id);
+        toast.success(`Product deleted`, {
+          description: `${deletingProduct.name} has been deleted`
+        })
+      } catch (e) {
+        if (e instanceof Error) {
+          console.error(e);
+          toast.error(`Delete Error`, {
+            description: `${e.message}`
+          })
+        }
+      }
     }
   };
 
@@ -63,7 +78,7 @@ export function InventoryTab() {
           <h1 className="text-2xl font-bold">Inventory Management</h1>
           <p className="text-muted-foreground">Manage your products and stock levels</p>
         </div>
-        <Button onClick={() => setIsAddModalOpen(true)} className="gap-2">
+        <Button onClick={() => setIsAddModalOpen(true)} className="gap-2 cursor-pointer">
           <Plus className="w-4 h-4" />
           Add Product
         </Button>
@@ -153,18 +168,19 @@ export function InventoryTab() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
+                          <div className="flex items-center justify-end gap-2.5">
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => setEditingProduct(product)}
+                              className='cursor-pointer'
                             >
                               <Pencil className="w-4 h-4" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-destructive hover:text-destructive"
+                              className="text-destructive hover:text-destructive cursor-pointer"
                               onClick={() => setDeletingProduct(product)}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -175,21 +191,24 @@ export function InventoryTab() {
                     )
                   })
                 )}
-                
+
           </TableBody>
         </Table>
         <CustomPagination totalPages={totalPages} onChange={(p) => setPagination(p)} />
       </div>
 
       {/* Add/Edit Modal */}
-      <ProductFormModal
-        open={isAddModalOpen || !!editingProduct}
-        onClose={() => {
-          setIsAddModalOpen(false);
-          setEditingProduct(null);
-        }}
-        product={editingProduct}
-      />
+      {
+        (isAddModalOpen || !!editingProduct) &&
+        <ProductFormModal
+          open={isAddModalOpen || !!editingProduct}
+          onClose={() => {
+            setIsAddModalOpen(false);
+            setEditingProduct(null);
+          }}
+          product={editingProduct}
+        />
+        }
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deletingProduct} onOpenChange={() => setDeletingProduct(null)}>

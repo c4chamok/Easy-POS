@@ -76,10 +76,28 @@ export const orderApi = createApi({
         }
       }),
 
-    getOrders: builder.query<{orders: Sale[]; meta: OrderResponse['meta']}, IPagination>({
+      changeStatus: builder.mutation<Sale, {
+        orderId: string;
+        status: Sale['status']
+      }>({
+        query: ({ orderId, status }) => ({
+          url: `/orders/${orderId}/status`,
+          method: 'PATCH',
+          body: { status }
+        }),
+        invalidatesTags: (result, error, { orderId }) => {
+          console.log(result, error);
+          return [
+            { type: 'Order', id: orderId },
+            'Orders'
+          ];
+        }
+      }),
+
+    getOrders: builder.query<{ orders: Sale[]; meta: OrderResponse['meta'] }, IPagination>({
       query: (dto) => `orders?page=${dto.currentPage}&limit=${dto.limit}`,
       providesTags: ['Orders'],
-      transformResponse: (res: OrderResponse)=> ({
+      transformResponse: (res: OrderResponse) => ({
         orders: res.data,
         meta: res.meta,
       }),
@@ -99,5 +117,6 @@ export const {
   useCheckoutMutation,
   useCompletePaymentMutation,
   useGetOrdersQuery,
-  useGetOrderQuery
+  useGetOrderQuery,
+  useChangeStatusMutation,
 } = orderApi;
