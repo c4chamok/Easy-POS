@@ -13,6 +13,7 @@ import { TestModule } from './test/test.module';
 import { PrismaExceptionFilter } from './common/filters/prismaException.filter';
 import { CartModule } from './cart/cart.module';
 import { OrderModule } from './order/order.module';
+import { StatsModule } from './stats/stats.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { OrderModule } from './order/order.module';
     TestModule,
     CartModule,
     OrderModule,
+    StatsModule,
   ],
   controllers: [],
   providers: [

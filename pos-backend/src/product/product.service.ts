@@ -16,7 +16,7 @@ export class ProductService {
   async fetchProducts(query: PaginationDto) {
     //get many products from redis
     const { page, limit, skip } = getPagination(query);
-    // const { data: products, count } = await
+
     const [{ data: products }, dbCount, dbTotal] = await Promise.all([
       this.redis.getMany<Product>('product', {
         page,

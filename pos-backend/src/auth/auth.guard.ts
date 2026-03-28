@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  HttpException,
+  Injectable,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { CustomConfigService } from '../config/config.service';
@@ -21,7 +26,7 @@ export class AuthGuard implements CanActivate {
       request['user'] = payload;
       return true;
     } catch {
-      throw new Error('Unauthorized: Invalid or expired token');
+      throw new HttpException('Unauthorized: Invalid or expired token', 401);
     }
   }
 
