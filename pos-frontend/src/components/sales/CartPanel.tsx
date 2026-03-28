@@ -55,7 +55,7 @@ export function CartPanel({ onCheckout }: CartPanelProps) {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="w-7 h-7"
+                  className="w-7 h-7 cursor-pointer"
                   onClick={() => dispatch(updateQuantity({ 
                     productId: item.productId, 
                     qty: item.quantity - 1 
@@ -76,7 +76,7 @@ export function CartPanel({ onCheckout }: CartPanelProps) {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="w-7 h-7"
+                  className="w-7 h-7 cursor-pointer"
                   onClick={() => dispatch(updateQuantity({ 
                     productId: item.productId, 
                     qty: item.quantity + 1 
@@ -92,8 +92,8 @@ export function CartPanel({ onCheckout }: CartPanelProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-6 h-6 text-destructive hover:text-destructive"
-                  onClick={() => removeFromCart(item.productId)}
+                  className="w-6 h-6 text-destructive hover:text-destructive cursor-pointer"
+                  onClick={() => dispatch(removeFromCart(item.productId))}
                 >
                   <Trash2 className="w-3 h-3" />
                 </Button>
@@ -122,7 +122,7 @@ export function CartPanel({ onCheckout }: CartPanelProps) {
           <div className="space-y-2">
             <Button
               onClick={onCheckout}
-              className="w-full gap-2"
+              className="w-full gap-2 cursor-pointer"
               size="lg"
             >
               <CreditCard className="w-4 h-4" />
@@ -131,7 +131,7 @@ export function CartPanel({ onCheckout }: CartPanelProps) {
             <Button
               variant="outline"
               onClick={() => dispatch(clearCart())}
-              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 cursor-pointer"
             >
               Clear Cart
             </Button>

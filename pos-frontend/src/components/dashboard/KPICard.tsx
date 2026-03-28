@@ -42,7 +42,7 @@ export function KPICard({ title, value, change, icon: Icon, variant = 'default',
     <div
       onClick={onClick}
       className={cn(
-        'rounded-xl p-5 shadow-card transition-all duration-200 hover:shadow-card-hover',
+        'rounded-xl shadow-md p-5 shadow-gray-200 transition-all duration-200 hover:shadow-card-hover',
         variantStyles[variant],
         onClick && 'cursor-pointer hover:scale-[1.02]'
       )}

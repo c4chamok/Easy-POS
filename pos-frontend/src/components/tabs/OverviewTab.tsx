@@ -9,8 +9,7 @@ import {
 import { KPICard } from '@/components/dashboard/KPICard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { usePOS } from '@/context/POSContext';
-import { salesData, topProducts, recentActivity } from '@/data/mockData';
+import { recentActivity } from '@/data/mockData';
 import {
   AreaChart,
   Area,
@@ -22,15 +21,97 @@ import {
   BarChart,
   Bar,
 } from 'recharts';
+import { useGetStatsQuery, type SaleByDayStat } from '@/store/api/statsApi';
+import type { Product } from '@/types/pos';
+import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { useNavigate } from 'react-router';
+
+type SaleStatType = { date: string; salesTotal: number; salesCount: number };
+
+const SaleDatatoStats = (data: SaleByDayStat[], days: number) => {
+  const result: SaleStatType[] = [];
+
+  const saleMap = new Map<string, SaleByDayStat>();
+  data.forEach(sale => {
+    const d = new Date(sale.createdAt);
+    saleMap.set(d.toISOString().split("T")[0], sale)
+  });
+
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split("T")[0];
+    const daySale = saleMap.get(key)
+
+    result.push(daySale ? {
+      date: key,
+      salesCount: daySale._count.id,
+      salesTotal: daySale._sum.total,
+    } :
+      {
+        date: key,
+        salesCount: 0,
+        salesTotal: 0,
+      });
+  }
+
+  return result;
+}
+
+const calculateGrowth = (todaySale: SaleStatType, yesterdaySale: SaleStatType) => {
+  const totalDiff = todaySale.salesTotal - yesterdaySale.salesTotal;
+  const totalGrowth = totalDiff * 100 / yesterdaySale.salesTotal;
+  if (!yesterdaySale.salesTotal) return { value: totalDiff, isPositive: true };
+  if (totalDiff > 0) return { value: totalGrowth, isPositive: true };
+  if (totalDiff === 0) return { value: 0, isPositive: true };
+  return { value: (-1) * totalGrowth, isPositive: false };
+}
+
 
 export function OverviewTab() {
-  const { products, orders, setActiveTab } = usePOS();
-  
-  const todaysSales = salesData[salesData.length - 1]?.sales || 0;
-  const todaysOrders = salesData[salesData.length - 1]?.orders || 0;
-  const pendingOrders = orders.filter(o => o.status === 'pending').length;
-  const lowStockItems = products.filter(p => p.status === 'low-stock').length;
-  const outOfStockItems = products.filter(p => p.status === 'out-of-stock').length;
+  const { data, isFetching } = useGetStatsQuery();
+  const navigate = useNavigate();
+  const lowStockItems: Product[] = [];
+  const outOfStockItems: Product[] = [];
+
+  const stats = data?.data;
+
+  if (isFetching) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center py-12">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  if (!stats) {
+    throw new Error("Could not fetch stats");
+  }
+
+  const {
+    lowStockProducts,
+    pendingSales,
+    sales,
+    topSellingProducts,
+    totalProducts,
+  } = stats!;
+
+  const salesStat = SaleDatatoStats(sales, 30);
+  const today = salesStat[salesStat.length - 1];
+  const yesterday = salesStat[salesStat.length - 2];
+
+  lowStockProducts.forEach(item => {
+    if (item.stockQty < 10 && item.stockQty > 0) {
+      lowStockItems.push(item);
+    };
+    if (item.stockQty === 0){ 
+      outOfStockItems.push(item);
+    }
+  });
+
+  const change = calculateGrowth(today, yesterday);
+
+
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -38,46 +119,48 @@ export function OverviewTab() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
         <KPICard
           title="Today's Sales"
-          value={`৳${todaysSales.toLocaleString()}`}
-          change={{ value: 12.5, isPositive: true }}
+          value={`৳${today.salesTotal.toLocaleString()}`}
+          change={change}
           icon={DollarSign}
           variant="primary"
-          onClick={() => setActiveTab('sales')}
+          onClick={() => navigate('sales')}
         />
         <KPICard
           title="Orders Today"
-          value={todaysOrders}
-          change={{ value: 8.2, isPositive: true }}
+          value={today.salesCount}
           icon={ShoppingBag}
-          onClick={() => setActiveTab('orders')}
-        />
-        <KPICard
-          title="Pending Orders"
-          value={pendingOrders}
-          icon={Clock}
-          variant={pendingOrders > 0 ? 'warning' : 'default'}
-          onClick={() => setActiveTab('orders')}
-        />
-        <KPICard
-          title="Low Stock Items"
-          value={lowStockItems}
-          icon={AlertTriangle}
-          variant={lowStockItems > 0 ? 'destructive' : 'default'}
-          onClick={() => setActiveTab('inventory')}
+          onClick={() => navigate('orders')}
         />
         <KPICard
           title="Total Products"
-          value={products.length}
+          value={totalProducts}
           icon={Package}
-          onClick={() => setActiveTab('inventory')}
+          onClick={() => navigate('inventory')}
         />
-        <KPICard
-          title="Out of Stock"
-          value={outOfStockItems}
-          icon={AlertTriangle}
-          variant={outOfStockItems > 0 ? 'destructive' : 'default'}
-          onClick={() => setActiveTab('inventory')}
-        />
+        {pendingSales > 0 &&
+          <KPICard
+            title="Pending Orders"
+            value={pendingSales}
+            icon={Clock}
+            variant={pendingSales > 0 ? 'warning' : 'default'}
+            onClick={() => navigate('orders')}
+          />}
+        {lowStockItems.length > 0 &&
+          <KPICard
+            title="Low Stock Items"
+            value={lowStockItems.length}
+            icon={AlertTriangle}
+            variant={lowStockItems.length > 0 ? 'warning' : 'default'}
+            onClick={() => navigate('inventory')}
+          />}
+        {outOfStockItems.length &&
+          <KPICard
+            title="Out of Stock"
+            value={outOfStockItems.length}
+            icon={AlertTriangle}
+            variant={outOfStockItems.length > 0 ? 'destructive' : 'default'}
+            onClick={() => navigate('inventory')}
+          />}
       </div>
 
       {/* Charts Row */}
@@ -91,7 +174,7 @@ export function OverviewTab() {
           <CardContent>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={salesData}>
+                <AreaChart data={salesStat}>
                   <defs>
                     <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
@@ -110,7 +193,7 @@ export function OverviewTab() {
                   />
                   <Area
                     type="monotone"
-                    dataKey="sales"
+                    dataKey="salesTotal"
                     stroke="var(--primary)"
                     strokeWidth={2}
                     fill="url(#salesGradient)"
@@ -129,7 +212,7 @@ export function OverviewTab() {
           <CardContent>
             <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topProducts} layout="vertical">
+                <BarChart data={topSellingProducts} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" horizontal={false} />
                   <XAxis type="number" tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }} />
                   <YAxis
@@ -164,10 +247,10 @@ export function OverviewTab() {
               Inventory Alerts
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {products
-                .filter(p => p.status !== 'in-stock')
+          <CardContent className=''>
+            <div className="space-y-3 max-h-80 overflow-auto scrollbar-thin">
+              
+              {lowStockProducts
                 .slice(0, 5)
                 .map((product) => (
                   <div
@@ -186,14 +269,14 @@ export function OverviewTab() {
                       </div>
                     </div>
                     <Badge
-                      variant={product.status === 'out-of-stock' ? 'destructive' : 'secondary'}
-                      className={product.status === 'low-stock' ? 'bg-warning/10 text-warning border-warning/20' : ''}
+                      variant={product.stockQty === 0 ? 'destructive' : 'secondary'}
+                      className={product.stockQty === 0 ? 'bg-warning/10 text-warning border-warning/20' : ''}
                     >
-                      {product.status === 'out-of-stock' ? 'Out of Stock' : 'Low Stock'}
+                      {product.stockQty === 0 ? 'Out of Stock' : 'Low Stock'}
                     </Badge>
                   </div>
                 ))}
-              {products.filter(p => p.status !== 'in-stock').length === 0 && (
+              {lowStockItems.length === 0 && (
                 <p className="text-center text-muted-foreground py-8">All products are well stocked!</p>
               )}
             </div>
@@ -217,13 +300,12 @@ export function OverviewTab() {
                 >
                   <div className="flex items-center gap-3">
                     <div
-                      className={`w-2 h-2 rounded-full ${
-                        activity.type === 'order'
-                          ? 'bg-primary'
-                          : activity.type === 'alert'
+                      className={`w-2 h-2 rounded-full ${activity.type === 'order'
+                        ? 'bg-primary'
+                        : activity.type === 'alert'
                           ? 'bg-warning'
                           : 'bg-success'
-                      }`}
+                        }`}
                     />
                     <p className="text-sm">{activity.message}</p>
                   </div>

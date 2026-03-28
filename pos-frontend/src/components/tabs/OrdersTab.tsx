@@ -25,7 +25,6 @@ import CustomPagination, { type IPagination } from '../common/CustomPagination';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
 export function OrdersTab() {
-  // const { orders, updateOrderStatus } = usePOS();
   const [pagination, setPagination] = useState<IPagination>({
     currentPage: 1,
     limit: 10

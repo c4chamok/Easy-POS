@@ -20,6 +20,7 @@ import {
 import { categories } from '@/data/mockData';
 import { toast } from 'sonner';
 import { useCreateProductMutation, useUpdateProductMutation } from '@/store/api/productsApi';
+import ImageUpload from '../common/ImageUpload';
 
 interface ProductFormModalProps {
   open: boolean;
@@ -43,7 +44,7 @@ export function ProductFormModal({ open, onClose, product }: ProductFormModalPro
     id: '',
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.name || !formData.sku || !formData.price || !formData.stockQty) {
@@ -65,7 +66,7 @@ export function ProductFormModal({ open, onClose, product }: ProductFormModalPro
 
     if (isEditing && product) {
       try {
-        updateProduct({ id: product.id, data: productData });
+        await updateProduct({ id: product.id, data: productData });
         toast.success('Product Updated', {
           description: `${formData.name} has been updated successfully.`,
         });
@@ -79,7 +80,7 @@ export function ProductFormModal({ open, onClose, product }: ProductFormModalPro
       }
     } else {
       try {
-        createProduct(productData);
+        await createProduct(productData);
         toast.success('Product Added', {
           description: `${formData.name} has been added to inventory.`,
         });
@@ -97,7 +98,7 @@ export function ProductFormModal({ open, onClose, product }: ProductFormModalPro
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-card max-w-md">
+      <DialogContent className="bg-card max-w-md flex-1 overflow-y-auto p-6 scrollbar-thin">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Product' : 'Add New Product'}</DialogTitle>
         </DialogHeader>
@@ -169,13 +170,14 @@ export function ProductFormModal({ open, onClose, product }: ProductFormModalPro
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="image">Image URL</Label>
+            {/* <Label htmlFor="image">Image URL</Label>
             <Input
               id="image"
               value={formData.image}
               onChange={(e) => setFormData({ ...formData, image: e.target.value })}
               placeholder="https://..."
-            />
+            /> */}
+            <ImageUpload/>
           </div>
 
           <div className="space-y-2">

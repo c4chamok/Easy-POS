@@ -2,6 +2,7 @@ import useCart from '@/hooks/useCart';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { Outlet } from 'react-router';
+import { ErrorBoundary } from '../ui/ErrorBoundary';
 
 
 export function MainLayout() {
@@ -13,7 +14,9 @@ export function MainLayout() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar />
         <main className="flex-1 overflow-auto p-6 scrollbar-thin">
-          <Outlet/>
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
     </div>
