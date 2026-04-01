@@ -19,22 +19,18 @@ export class StatsService {
     });
 
     // 2️⃣ Sales of (last X days)
-    const sales = await this.prisma.sale.groupBy({
-      by: ['createdAt'],
-      _sum: {
-        total: true,
-      },
-      _count: {
-        id: true,
-      },
-      where: {
-        createdAt: { gte: fromDate },
-        status: 'COMPLETED',
-      },
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
+    const sales = await this.prisma.$queryRaw<
+      { date: Date; totalSales: number; salesCount: number }[]
+    >`
+      SELECT 
+      DATE("createdAt") as date,
+      SUM(total) as "totalSales",
+      COUNT(*)::int as "salesCount"
+      FROM "Sale"
+      WHERE "createdAt" >= ${fromDate}
+      GROUP BY DATE("createdAt")
+      ORDER BY date ASC;
+    `;
 
     // 3️⃣ Top 5 selling products
     const topProducts = await this.prisma.saleItem.groupBy({

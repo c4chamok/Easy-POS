@@ -122,7 +122,7 @@ export class ProductService {
       where: { id },
       data: p,
     });
-    await this.redis.setRedis(`product:${p.id}`, product);
+    await this.redis.setRedis(`product:${id}`, product);
     return { success: true, message: `product ${p.sku} updated successfully` };
   }
   deleteProduct(id: string) {

@@ -23,6 +23,9 @@ export class CustomConfigService {
   getRedisPort() {
     return this.configService.get<number>('REDIS_PORT');
   }
+  getRedisUserName() {
+    return this.configService.get<string>('REDIS_USERNAME');
+  }
   getRedisPassword() {
     return this.configService.get<string>('REDIS_PASSWORD');
   }
