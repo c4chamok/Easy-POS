@@ -20,9 +20,12 @@ import {
 } from '@/components/ui/select';
 import { OrderPaymentModal } from '@/components/orders/OrderPaymentModal';
 import { cn } from '@/lib/utils';
-import { useChangeStatusMutation, useGetOrdersQuery } from '@/store/api/orderApi';
+import { useChangeStatusMutation, useGetOrdersQuery, type Sale } from '@/store/api/orderApi';
 import CustomPagination, { type IPagination } from '../common/CustomPagination';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import OrderedItemsSubtable from '../orders/OrderedItemsSubtable';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
 
 export function OrdersTab() {
   const [pagination, setPagination] = useState<IPagination>({
@@ -34,11 +37,19 @@ export function OrdersTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'PENDING' | 'PAID'>('all');
   const [payingOrder, setPayingOrder] = useState<Order | null>(null);
+  const [ordered, setordered] = useState<Sale | null>(null);
 
   const { orders, meta } = data ?? { orders: [], meta: { total: 0, page: 1, limit: 10 } };
   const totalPages = Math.ceil(meta?.total / meta.limit);
 
-  // console.log(meta.page, pagination.currentPage);
+  const showOrderedItems = (order: Sale) => {
+    if (ordered && ordered.id === order.id) {
+      // If the same order is clicked again, toggle off the subtable
+      setordered(null);
+    } else {
+      setordered(order);
+    }
+  }
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
@@ -124,48 +135,53 @@ export function OrdersTab() {
                 </TableRow>
               ) : (
                 filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
-                    <TableCell className="text-muted-foreground">{formatDate(order.createdAt)}</TableCell>
-                    <TableCell>{order.customerName || '-'}</TableCell>
-                    <TableCell className="text-center">{order.items.length}</TableCell>
-                    <TableCell className="text-right font-medium">৳{order.total}</TableCell>
-                    {/* <TableCell className="text-center">
-                    <Badge
-                      className={cn(
-                        order.fullPaid
-                          ? 'bg-success/10 text-success border-success/20'
-                          : 'bg-warning/10 text-warning border-warning/20'
-                      )}
-                      variant="outline"
-                    >
-                      {order.fullPaid ? 'Paid' : `Due: ৳${order.total - order.paidAmount}`}
-                    </Badge>
-                  </TableCell> */}
-                    <TableCell className="text-center">
-                      <Select
-                        value={order.status}
-                        onValueChange={(v: Order['status']) => 
-                          changeStatus({ orderId: order.id, status: v })}
+                  <>
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">{order.id}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatDate(order.createdAt)}</TableCell>
+                      <TableCell>{order.customerName || '-'}</TableCell>
+                      <TableCell className="text-center">
+                        <Button variant="outline" size="sm" onClick={() => showOrderedItems(order)}>
+                          View Items <Badge>{order.items.length}</Badge>
+                        </Button>
+                      </TableCell>
+                      <TableCell className="text-right font-medium">৳{order.total}</TableCell>
+                      {/* <TableCell className="text-center">
+                      <Badge
+                        className={cn(
+                          order.fullPaid
+                            ? 'bg-success/10 text-success border-success/20'
+                            : 'bg-warning/10 text-warning border-warning/20'
+                        )}
+                        variant="outline"
                       >
-                        <div className="flex flex-col items-center gap-2">
-                          <SelectTrigger
-                            className={cn(
-                              'w-[110px] h-8 text-xs',
-                              order.status === 'PENDING' && 'bg-warning/10 text-warning border-warning/20',
-                              order.status === 'COMPLETED' && 'bg-success/10 text-success border-success/20'
-                            )}
-                          >
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="bg-popover z-50">
-                            <SelectItem value="PENDING">Pending</SelectItem>
-                            <SelectItem value="COMPLETED">Delivered</SelectItem>
-                          </SelectContent>
-                        </div>
-                      </Select>
-                    </TableCell>
-                    {/* <TableCell className="text-right">
+                        {order.fullPaid ? 'Paid' : `Due: ৳${order.total - order.paidAmount}`}
+                      </Badge>
+                    </TableCell> */}
+                      <TableCell className="text-center">
+                        <Select
+                          value={order.status}
+                          onValueChange={(v: Order['status']) =>
+                            changeStatus({ orderId: order.id, status: v })}
+                        >
+                          <div className="flex flex-col items-center gap-2">
+                            <SelectTrigger
+                              className={cn(
+                                'w-[110px] h-8 text-xs',
+                                order.status === 'PENDING' && 'bg-warning/10 text-warning border-warning/20',
+                                order.status === 'COMPLETED' && 'bg-success/10 text-success border-success/20'
+                              )}
+                            >
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-popover z-50">
+                              <SelectItem value="PENDING">Pending</SelectItem>
+                              <SelectItem value="COMPLETED">Delivered</SelectItem>
+                            </SelectContent>
+                          </div>
+                        </Select>
+                      </TableCell>
+                      {/* <TableCell className="text-right">
                     {!order.fullPaid && (
                       <Button
                         size="sm"
@@ -184,7 +200,15 @@ export function OrdersTab() {
                       </Badge>
                     )}
                   </TableCell> */}
-                  </TableRow>
+                    </TableRow>
+                    {ordered && ordered.id === order.id && (
+                      <TableRow key={`expanded` + order.id} className="bg-muted/50">
+                        <TableCell colSpan={8} className="p-4">
+                          <OrderedItemsSubtable orderedItems={ordered.items} />
+                        </TableCell>
+                      </TableRow >)
+                    }
+                  </>
                 ))
               )}
           </TableBody>
@@ -197,6 +221,6 @@ export function OrdersTab() {
         order={payingOrder}
         onClose={() => setPayingOrder(null)}
       />
-    </div>
+    </div >
   );
 }

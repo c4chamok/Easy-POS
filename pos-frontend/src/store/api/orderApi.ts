@@ -1,14 +1,17 @@
 import type { IPagination } from '@/components/common/CustomPagination'
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
+import { statsApi } from './statsApi'
+import { productsApi } from './productsApi'
+import type { Product } from '@/types/pos'
 
 export interface CheckoutDto {
-  paymentMethod: 'CASH' | 'CARD' | 'ONLINE'
+  paymentMethod: 'CASH' | 'CARD' | 'MOBILE'
   customerName?: string
   paidAmount: number
 }
 
 export interface CompletePaymentDto {
-  paymentMethod?: 'CASH' | 'CARD' | 'ONLINE'
+  paymentMethod?: 'CASH' | 'CARD' | 'MOBILE'
 }
 
 export interface SaleItem {
@@ -16,6 +19,7 @@ export interface SaleItem {
   productId: string
   quantity: number
   unitPrice: number
+  product: Product
 }
 
 export interface Sale {
@@ -56,7 +60,20 @@ export const orderApi = createApi({
         method: 'POST',
         body
       }),
-      invalidatesTags: ['Orders']
+      invalidatesTags: ['Orders'],
+      onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
+        try {
+          // wait until API succeeds
+          await queryFulfilled;
+
+          // 🔥 manually invalidate stats
+          dispatch(statsApi.util.invalidateTags(["Stats"]));
+          dispatch(productsApi.util.invalidateTags(["Products"]));
+
+        } catch (err) {
+          console.log("failed", err);
+        }
+      }
     }),
 
     completePayment: builder.mutation<
@@ -76,23 +93,35 @@ export const orderApi = createApi({
         }
       }),
 
-      changeStatus: builder.mutation<Sale, {
-        orderId: string;
-        status: Sale['status']
-      }>({
-        query: ({ orderId, status }) => ({
-          url: `/orders/${orderId}/status`,
-          method: 'PATCH',
-          body: { status }
-        }),
-        invalidatesTags: (result, error, { orderId }) => {
-          console.log(result, error);
-          return [
-            { type: 'Order', id: orderId },
-            'Orders'
-          ];
-        }
+    changeStatus: builder.mutation<Sale, {
+      orderId: string;
+      status: Sale['status']
+    }>({
+      query: ({ orderId, status }) => ({
+        url: `/orders/${orderId}/status`,
+        method: 'PATCH',
+        body: { status }
       }),
+      invalidatesTags: (result, error, { orderId }) => {
+        console.log(result, error);
+        return [
+          { type: 'Order', id: orderId },
+          'Orders',
+        ];
+      },
+      onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
+        try {
+          // wait until API succeeds
+          await queryFulfilled;
+
+          // 🔥 manually invalidate stats
+          dispatch(statsApi.util.invalidateTags(["Stats"]));
+
+        } catch (err) {
+          console.log("failed", err);
+        }
+      }
+    }),
 
     getOrders: builder.query<{ orders: Sale[]; meta: OrderResponse['meta'] }, IPagination>({
       query: (dto) => `orders?page=${dto.currentPage}&limit=${dto.limit}`,

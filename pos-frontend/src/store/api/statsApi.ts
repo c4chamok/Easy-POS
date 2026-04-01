@@ -7,15 +7,7 @@ type TopSellingData = {
     unitsSold: number;
 }
 
-export type SaleByDayStat = {
-    _sum: {
-        total: number;
-    },
-    _count: {
-        id: number;
-    },
-    createdAt: string;
-}
+export type SaleByDayStat = { date: string; totalSales: number; salesCount: number }
 
 export type StatsData = {
     totalSalesAmount: number;
@@ -46,7 +38,7 @@ export const statsApi = createApi({
 
         // ✅ GET Stats
         getStats: builder.query<StatsQueryResponse, void>({
-            query: () => `/stats?days=365`,
+            query: () => `/stats?days=7`,
             providesTags: ['Stats'],
         }),
     }),

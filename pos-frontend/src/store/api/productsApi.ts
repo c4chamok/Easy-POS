@@ -3,6 +3,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { Product } from '@/types/pos';
 import type { IPagination } from '@/components/common/CustomPagination';
+import { statsApi } from './statsApi';
 
 type ProductResponse = {
   success: boolean;
@@ -52,6 +53,18 @@ export const productsApi = createApi({
           body: data,
         }),
         invalidatesTags: ['Products'],
+        onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
+          try {
+            // wait until API succeeds
+            await queryFulfilled;
+
+            // 🔥 manually invalidate stats
+            dispatch(statsApi.util.invalidateTags(["Stats"]));
+
+          } catch (err) {
+            console.log("failed", err);
+          }
+        }
       }),
 
     // ✅ DELETE PRODUCT
@@ -61,6 +74,18 @@ export const productsApi = createApi({
         method: 'DELETE',
       }),
       invalidatesTags: ['Products'],
+      onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
+        try {
+          // wait until API succeeds
+          await queryFulfilled;
+
+          // 🔥 manually invalidate stats
+          dispatch(statsApi.util.invalidateTags(["Stats"]));
+
+        } catch (err) {
+          console.log("failed", err);
+        }
+      }
     }),
   }),
 });

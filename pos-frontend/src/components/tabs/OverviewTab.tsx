@@ -26,15 +26,13 @@ import type { Product } from '@/types/pos';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { useNavigate } from 'react-router';
 
-type SaleStatType = { date: string; salesTotal: number; salesCount: number };
-
 const SaleDatatoStats = (data: SaleByDayStat[], days: number) => {
-  const result: SaleStatType[] = [];
+  const result: SaleByDayStat[] = [];
 
   const saleMap = new Map<string, SaleByDayStat>();
   data.forEach(sale => {
-    const d = new Date(sale.createdAt);
-    saleMap.set(d.toISOString().split("T")[0], sale)
+    const d = new Date(sale.date);
+    saleMap.set(d.toISOString().split("T")[0], {...sale, date: d.toISOString().split("T")[0]});
   });
 
   for (let i = days - 1; i >= 0; i--) {
@@ -43,25 +41,16 @@ const SaleDatatoStats = (data: SaleByDayStat[], days: number) => {
     const key = d.toISOString().split("T")[0];
     const daySale = saleMap.get(key)
 
-    result.push(daySale ? {
-      date: key,
-      salesCount: daySale._count.id,
-      salesTotal: daySale._sum.total,
-    } :
-      {
-        date: key,
-        salesCount: 0,
-        salesTotal: 0,
-      });
+    result.push(daySale ? daySale : { date: key, totalSales: 0, salesCount: 0 });
   }
-
+  console.log(result);
   return result;
 }
 
-const calculateGrowth = (todaySale: SaleStatType, yesterdaySale: SaleStatType) => {
-  const totalDiff = todaySale.salesTotal - yesterdaySale.salesTotal;
-  const totalGrowth = totalDiff * 100 / yesterdaySale.salesTotal;
-  if (!yesterdaySale.salesTotal) return { value: totalDiff, isPositive: true };
+const calculateGrowth = (todaySale: SaleByDayStat, yesterdaySale: SaleByDayStat) => {
+  const totalDiff = todaySale.totalSales - yesterdaySale.totalSales;
+  const totalGrowth = totalDiff * 100 / yesterdaySale.totalSales;
+  if (!yesterdaySale.totalSales) return { value: totalDiff, isPositive: true };
   if (totalDiff > 0) return { value: totalGrowth, isPositive: true };
   if (totalDiff === 0) return { value: 0, isPositive: true };
   return { value: (-1) * totalGrowth, isPositive: false };
@@ -96,7 +85,7 @@ export function OverviewTab() {
     totalProducts,
   } = stats!;
 
-  const salesStat = SaleDatatoStats(sales, 30);
+  const salesStat = SaleDatatoStats(sales, 7);
   const today = salesStat[salesStat.length - 1];
   const yesterday = salesStat[salesStat.length - 2];
 
@@ -119,7 +108,7 @@ export function OverviewTab() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
         <KPICard
           title="Today's Sales"
-          value={`৳${today.salesTotal.toLocaleString()}`}
+          value={`৳${today.totalSales.toLocaleString()}`}
           change={change}
           icon={DollarSign}
           variant="primary"
@@ -193,7 +182,7 @@ export function OverviewTab() {
                   />
                   <Area
                     type="monotone"
-                    dataKey="salesTotal"
+                    dataKey="totalSales"
                     stroke="var(--primary)"
                     strokeWidth={2}
                     fill="url(#salesGradient)"
@@ -276,7 +265,7 @@ export function OverviewTab() {
                     </Badge>
                   </div>
                 ))}
-              {lowStockItems.length === 0 && (
+              {lowStockProducts.length === 0 && (
                 <p className="text-center text-muted-foreground py-8">All products are well stocked!</p>
               )}
             </div>

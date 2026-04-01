@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Banknote, CreditCard, Smartphone, Check } from 'lucide-react';
+import { Banknote, CreditCard, Smartphone, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,12 +21,12 @@ interface PaymentModalProps {
   onClose: () => void;
 }
 
-type PaymentMethod = 'CASH' | 'CARD' | 'ONLINE';
+type PaymentMethod = 'CASH' | 'CARD' | 'MOBILE';
 
 export function PaymentModal({ open, onClose }: PaymentModalProps) {
   const dispatch = useAppDispatch();
   const { items, grandTotal } = useAppSelector((state) => state.cart);
-  const [checkout] = useCheckoutMutation()
+  const [checkout, { isLoading }] = useCheckoutMutation()
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('CASH');
   const [amountPaid, setAmountPaid] = useState<string>(grandTotal.toString());
   const [customerName, setCustomerName] = useState('');
@@ -43,23 +43,23 @@ export function PaymentModal({ open, onClose }: PaymentModalProps) {
       return;
     }
 
-    try {      
+    try {
       await checkout({
         paymentMethod: paymentMethod,
         paidAmount: Number.parseFloat(amountPaid),
         customerName,
       })
-      toast('Order Created!',{
-        description: `Order has been placed successfully.${change > 0 ? ` Change: ৳${change.toFixed(2)}` : ''}`,
+      toast('Order Created!', {
+        description: `Order has been placed successfully. ${change > 0 ? ` Change: ৳${change.toFixed(2)}` : ''}`,
       });
-  
+
       dispatch(clearCart());
       onClose();
       setAmountPaid('');
       setCustomerName('');
     } catch (error) {
       console.log('checkout Error: ', error);
-        toast.error('could not complete order')      
+      toast.error('could not complete order')
     }
 
   };
@@ -67,7 +67,7 @@ export function PaymentModal({ open, onClose }: PaymentModalProps) {
   const paymentMethods = [
     { id: 'CASH' as const, label: 'Cash', icon: Banknote },
     { id: 'CARD' as const, label: 'Card', icon: CreditCard },
-    { id: 'ONLINE' as const, label: 'Mobile', icon: Smartphone },
+    { id: 'MOBILE' as const, label: 'Mobile', icon: Smartphone },
   ];
 
   return (
@@ -117,7 +117,7 @@ export function PaymentModal({ open, onClose }: PaymentModalProps) {
                   key={id}
                   onClick={() => setPaymentMethod(id)}
                   className={cn(
-                    'flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all',
+                    'flex flex-col items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all',
                     paymentMethod === id
                       ? 'border-primary bg-primary/5'
                       : 'border-border hover:border-primary/50'
@@ -151,9 +151,19 @@ export function PaymentModal({ open, onClose }: PaymentModalProps) {
           )}
 
           {/* Confirm Button */}
-          <Button onClick={handleConfirm} className="w-full gap-2" size="lg">
-            <Check className="w-4 h-4" />
-            Confirm Payment
+          <Button
+            onClick={handleConfirm}
+            className={"w-full gap-2 cursor-pointer"}
+            disabled={isLoading}
+            size="lg">
+            {
+              isLoading ? <Loader2 className="w-4 h-4 animate-spin" />
+              :
+              <>
+                <Check className="w-4 h-4" />
+                Confirm Payment
+              </>
+            }
           </Button>
         </div>
       </DialogContent>

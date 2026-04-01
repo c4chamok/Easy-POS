@@ -20,7 +20,8 @@ import {
 import { categories } from '@/data/mockData';
 import { toast } from 'sonner';
 import { useCreateProductMutation, useUpdateProductMutation } from '@/store/api/productsApi';
-import ImageUpload from '../common/ImageUpload';
+import { Loader2 } from 'lucide-react';
+// import ImageUpload from '../common/ImageUpload';
 
 interface ProductFormModalProps {
   open: boolean;
@@ -29,9 +30,10 @@ interface ProductFormModalProps {
 }
 
 export function ProductFormModal({ open, onClose, product }: ProductFormModalProps) {
-  const [createProduct] = useCreateProductMutation()
-  const [updateProduct] = useUpdateProductMutation();
+  const [createProduct, { isLoading: createLoading }] = useCreateProductMutation()
+  const [updateProduct, { isLoading: updateLoading }] = useUpdateProductMutation();
   const isEditing = !!product;
+  const isLoading = createLoading || updateLoading;
 
   const [formData, setFormData] = useState<Omit<Product, 'status'>>(product ?? {
     name: '',
@@ -170,14 +172,14 @@ export function ProductFormModal({ open, onClose, product }: ProductFormModalPro
           </div>
 
           <div className="space-y-2">
-            {/* <Label htmlFor="image">Image URL</Label>
+            <Label htmlFor="image">Image URL</Label>
             <Input
               id="image"
               value={formData.image}
               onChange={(e) => setFormData({ ...formData, image: e.target.value })}
               placeholder="https://..."
-            /> */}
-            <ImageUpload/>
+            />
+            {/* <ImageUpload/> */}
           </div>
 
           <div className="space-y-2">
@@ -195,8 +197,16 @@ export function ProductFormModal({ open, onClose, product }: ProductFormModalPro
             <Button type="button" variant="outline" onClick={onClose} className="flex-1 cursor-pointer">
               Cancel
             </Button>
-            <Button type="submit" className="flex-1 cursor-pointer">
-              {isEditing ? 'Update Product' : 'Add Product'}
+            <Button
+              type="submit"
+              className="flex-1 cursor-pointer"
+              disabled={isLoading}
+            >
+              {
+                isLoading ? <Loader2 className="w-4 h-4 animate-spin" />
+                :
+                isEditing ? 'Update Product' : 'Add Product'
+              }
             </Button>
           </div>
         </form>
